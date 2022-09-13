@@ -77,9 +77,9 @@ Relation properties are stored in additional attributes that need not be indexed
 ### Relations - the missing Link
 
 * corner stone of the proposed solution, storing relations between files, along with relation properties, in filesystem attributes:
-  * 'SEN_ID': unique ID (like an Object ID in document storage systems), simplified as small numbers below, but is really a UUID.
-  * 'SEN_REL_TARGETS': comma-separated SEN_ID's of referenced files
-  * 'SEN_REL:<ID>:<LABEL>': properties of relation with label 'LABEL' to target with SEN_ID 'ID' as a key/value map ('BMessage' type in Haiku)
+  * `SEN_ID`: unique ID (like an Object ID in document storage systems), simplified as small numbers below, but is really a UUID.
+  * `SEN_REL_TARGETS`: comma-separated SEN_ID's of referenced files
+  * `SEN_REL:\<ID>:\<LABEL>`: properties of relation with label 'LABEL' to target with SEN_ID 'ID' as a key/value map ('BMessage' type in Haiku)
 
 ### Example PKG: Books, Authors and Publishers
 
@@ -89,39 +89,39 @@ Relation properties are stored in additional attributes that need not be indexed
 
 * File "Book of SEN.md":
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815:authoredBy | SEN_REL:4711:publishedBy    | (standard file attributes)... |
-|:-------|:----------------|:------------------------|:----------------------------|:------------------------------|
-| 123    | 0815,4711       | *role:*author           | *role:*publisher            |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815:authoredBy | SEN_REL:4711:publishedBy  | (standard file attributes)... |
+|:-------|:----------------|:------------------------|:--------------------------|:------------------------------|
+| 123    | 0815,4711       | role:author             | role:publisher            |                               |
 
 * File "Gregor Rosenauer":
 
 | SEN_ID | SEN_REL_TARGETS | SEN_REL:123:authors | (standard file attributes)... |
 |:-------|:----------------|:--------------------|:------------------------------|
-| 0815   | 123             | *role:*author       |                               |
+| 0815   | 123             | role:author         |                               |
 
 * File "Writer's Block":
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:publishes                   | (standard file attributes)... |
-|:-------|:----------------|:----------------------------------------|:------------------------------|
-| 4711   | 123             | *role:*publisher,*date:*01/12/2022      |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:publishes          | (standard file attributes)... |
+|:-------|:----------------|:-------------------------------|:------------------------------|
+| 4711   | 123             | role:publisher,date:01/12/2022 |                               |
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:signs     | SEN_REL:123:pays                          | (standard file attributes)... |
-|:-------|:----------------|:----------------------|:--------------|:--------------------------|-------------------------------|
-| 4711   | 0815            | *date:*31/12/2022     | *amount*:100 EUR,*targetDate*:31/12/2022  |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:signs | SEN_REL:123:pays                     | (standard file attributes)... |
+|:-------|:----------------|:------------------|:-------------------------------------|:------------------------------|
+| 4711   | 0815            | date:31/12/2022   | amount:100 EUR,targetDate:31/12/2022 |                               |
 
 * another example with referencing documents and related annotations:
 
 ![Notes Graph](images/text-annotation.svg "notes and annotations")
 
 * File "Lorem ipsum.txt":
-* 
+
 | SEN_ID | SEN_REL_TARGETS | SEN_REL:2412:annotatedBy | (standard file attributes)... |
 |:-------|:----------------|:-------------------------|:------------------------------|
 | 1130   | 2412            |                          |                               |
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:1130:annotates          | (standard file attributes)... |
-|:-------|:----------------|:--------------------------------|:------------------------------|
-| 2412   | 1130            | *offsetStart:*65,*offsetEnd:*79 |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:1130:annotates      | (standard file attributes)... |
+|:-------|:----------------|:----------------------------|:------------------------------|
+| 2412   | 1130            | offsetStart:65,offsetEnd:79 |                               |
 
 * navigation through OS-supported filesystem queries, may be intercepted and enriched by SEN (resolving placeholders or allowing to search relations and their properties)
 
