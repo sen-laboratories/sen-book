@@ -9,9 +9,9 @@ On the other hand, there is raising criticism in the usefulness of this approach
 Also, not everything can or should be captured in note taking applications and handled via cloud services, as sophisticated as they may have become.
 A lot of valuable information is still locally stored on personal desktop systems in the form of carefully selected documents, ebooks, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, conecpts, or drafts.
 
-Peronal knowedge graphs should also cover all kinds of information, not only document or media entities, but also various communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and highly connected to personal data and work that derives from it.
+Personal knowledge graphs should also cover all kinds of information, not only document or media entities, but also various communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and highly connected to personal data and work that derives from it.
 
-A truly personal knowedge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing information, understand its connections, make them visible to the user and allow to navigate and query it.
+A truly personal knowledge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing information, understand its connections, make them visible to the user and allow to navigate and query it.
 
 ## A Vision for a Personal Knowledge Graph based on the Semantic Desktop
 
@@ -23,11 +23,11 @@ Although many modern filesystems now support custom attributes as key/value pair
 
 Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
 
-More amibitous efforts in file system development failed because of similar complexity [](WinFS), trying to integrate a full-fledged database into a desktop OS intended for everyday use.
+More ambitious efforts in file system development failed because of similar complexity [](WinFS), trying to integrate a full-fledged database into a desktop OS intended for everyday use.
 
 So an ideal solution should be lightweight and integrate transparently and naturally with the desktop the user knows and operates daily, built on a file system that supports semantic queries or can be extended with minimum overhead.
 
-SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastucture and API already provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations have been ommitted because the original creators of BeOS identified the same fallacies outlined above (the first version of the OS still had a Table and Relations API though).
+SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastructure and API already provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations have been omitted because the original creators of BeOS identified the same fallacies outlined above (the first version of the OS still had a Table and Relations API though).
 
 SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very thin, message-based API to bridge this extension of the base OS.
 
@@ -39,7 +39,7 @@ Relation properties are stored in additional attributes that need not be indexed
 
 ### Design Philosophy and Core Principles
 
-1. *simple:* KISS, SEN is not an expert system, but targeted at personal desktop and average users: should gradually and transparently provide more advanced unctionality as needed and understood
+1. *simple:* KISS, SEN is not an expert system, but targeted at personal desktop and average users: should gradually and transparently provide more advanced functionality as needed and understood
 1. *unobtrusive:* should not impact system performance and resources notably
 1. *transparent:* should integrate with desktop and common metaphors, working directly on files, folders, filetypes and attributes - extensions to desktop (file manager, behavior) only where needed (e.g., to integrate new concept of relations)
 1. *open but private:* system should be open for extension, but personal data is kept private and does not leave the personal system: extension through plugins (e.g., for extracting attributes and entities from files), for importing data (e.g., ontologies or individual entities from schema.org), and for exchanging data where explicitly requested (linked data between users).
@@ -77,9 +77,9 @@ Relation properties are stored in additional attributes that need not be indexed
 ### Relations - the missing Link
 
 * corner stone of the proposed solution, storing relations between files, along with relation properties, in filesystem attributes:
-  * SEN_ID:
-  * SEN_REL_TARGETS:
-  * SEN_REL:<id>
+  * 'SEN_ID': unique ID (like an Object ID in document storage systems), simplified as small numbers below, but is really a UUID.
+  * 'SEN_REL_TARGETS': comma-separated SEN_ID's of referenced files
+  * 'SEN_REL:<ID>:<LABEL>': properties of relation with label 'LABEL' to target with SEN_ID 'ID' as a key/value map ('BMessage' type in Haiku)
 
 ### Example PKG: Books, Authors and Publishers
 
@@ -87,29 +87,41 @@ Relation properties are stored in additional attributes that need not be indexed
 
 ![Book Graph](images/book-graph.svg "a simple authoring graph")
 
-* File "Book.md":
+* File "Book of SEN.md":
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815 | SEN_REL:4711 | (standard file attributes)...
-|:---|:---|:---|:---|
-| 123 | 0815,4711 | *label:*authoredBy,*role:*author | *label:*publishedBy,*role:*publisher |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815:authoredBy | SEN_REL:4711:publishedBy    | (standard file attributes)... |
+|:-------|:----------------|:------------------------|:----------------------------|:------------------------------|
+| 123    | 0815,4711       | *role:*author           | *role:*publisher            |                               |
 
 * File "Gregor Rosenauer":
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123                   | (standard file attributes)... |
-|:-------|:----------------|:------------------------------|:------------------------------|
-| 0815   | 123             | *label:*authors,*role:*author |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:authors | (standard file attributes)... |
+|:-------|:----------------|:--------------------|:------------------------------|
+| 0815   | 123             | *role:*author       |                               |
 
 * File "Writer's Block":
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123                        | (standard file attributes)... |
-|:-------|:----------------|:-----------------------------------|:------------------------------|
-| 4711   | 123             | *label:*publishes,*role:*publisher |                               |
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:publishes                   | (standard file attributes)... |
+|:-------|:----------------|:----------------------------------------|:------------------------------|
+| 4711   | 123             | *role:*publisher,*date:*01/12/2022      |                               |
+
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:signs     | SEN_REL:123:pays                          | (standard file attributes)... |
+|:-------|:----------------|:----------------------|:--------------|:--------------------------|-------------------------------|
+| 4711   | 0815            | *date:*31/12/2022     | *amount*:100 EUR,*targetDate*:31/12/2022  |                               |
 
 * another example with referencing documents and related annotations:
 
-* | SEN_ID | SEN_REL_TARGETS | SEN_REL:0815 | SEN_REL:4711 | (standard file attributes)...
-|:---|:---|:---|:---|
+![Notes Graph](images/text-annotation.svg "notes and annotations")
 
+* File "Lorem ipsum.txt":
+* 
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:2412:annotatedBy | (standard file attributes)... |
+|:-------|:----------------|:-------------------------|:------------------------------|
+| 1130   | 2412            |                          |                               |
+
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:1130:annotates          | (standard file attributes)... |
+|:-------|:----------------|:--------------------------------|:------------------------------|
+| 2412   | 1130            | *offsetStart:*65,*offsetEnd:*79 |                               |
 
 * navigation through OS-supported filesystem queries, may be intercepted and enriched by SEN (resolving placeholders or allowing to search relations and their properties)
 
