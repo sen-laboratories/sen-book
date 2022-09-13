@@ -1,8 +1,6 @@
-SEN - Chapter outline
+[[Gregor Rosenauer]]
 
-(this rough cut focusses on the "meat", exact references, illustrations and more details about the prototype with screenshots with be added later)
-
-# Motivation and Vision Statement
+## Motivation and Vision Statement
 
 Although the idea behind personal knowledge graphs dates back to the 1960s with the now famous Zettelkasten method by Luhmann [xx](yy), it only became popular in recent years with the introduction of connected note taking tools like Evernote, Notion, Roam or Obdisian, to name only a few.
 
@@ -21,9 +19,9 @@ A truly personal knowedge graph needs to live "on the edge", i.e. the user's sys
 
 The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic filesystem, with attributes and relations built-in.
 
-Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query for them (there is an experimental patch to make the `find` command support this), and there is no support for relations, reducing their use to static metadata for display in info panels.
+Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query for them (there is an experimental patch to make the `find` command support this <<REF!>>), and there is no support for relations, reducing their use to static metadata for display in info panels.
 
-Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web than the desktop, which makes development harder than needed and slows down adoption and user acceptance.
+Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
 
 More amibitous efforts in file system development failed because of similar complexity [](WinFS), trying to integrate a full-fledged database into a desktop OS intended for everyday use.
 
@@ -31,14 +29,25 @@ So an ideal solution should be lightweight and integrate transparently and natur
 
 SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastucture and API already provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations have been ommitted because the original creators of BeOS identified the same fallacies outlined above (the first version of the OS still had a Table and Relations API though).
 
-SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very thin API to bridge this extension of the base OS.
-For performance, any file that is part of a relation gets a unique and stable identifier (an object id), and relations reference this ID in a single custom attribute. Because both the file ID of the source and the relation IDs pointing to target files are stored in an indexed attribute, they can be queried very efficiently.
-Relation properties are stored in additional attributes that need not be indexed, as they are retrieved on demand in near real time.
+SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very thin, message-based API to bridge this extension of the base OS.
+
+For performance, any file that is part of a relation gets a unique and stable identifier (like an object ID), and relations reference this ID in a single custom attribute. Because both the object ID of the source (file) and the relation IDs of the target files are stored in indexed attributes, they can be queried very efficiently.
+
+Relation properties are stored in additional attributes that need not be indexed, as they are retrieved on demand in near real time. They are stored in separate attributes as a map of relation property key/values for each relation.
 
 ## How to Build it: The Pillars of the Proposed Solution
 
-* Learning from the Past: A short history of the Semantic Desktop
+### Design Philosophy and Core Principles
+
+1. *simple:* KISS, SEN is not an expert system, but targeted at personal desktop and average users: should gradually and transparently provide more advanced unctionality as needed and understood
+1. *unobtrusive:* should not impact system performance and resources notably
+1. *transparent:* should integrate with desktop and common metaphors, working directly on files, folders, filetypes and attributes - extensions to desktop (file manager, behavior) only where needed (e.g., to integrate new concept of relations)
+1. *open but private:* system should be open for extension, but personal data is kept private and does not leave the personal system: extension through plugins (e.g., for extracting attributes and entities from files), for importing data (e.g., ontologies or individual entities from schema.org), and for exchanging data where explicitly requested (linked data between users).
+
+### Learning from the Past: A short history of promises and failures of the Semantic Desktop
+
     * The Role of Metadata in Filesystem Design - From Acorn to UNIX
+    basic support and OS usage of metadata was already there in the 1990s, cf Amiga FileNotes used in web browser IBrowse for storing originating web site for downloads
     * Promising Concepts: Nepomuk and Baloo
     * Problems with Current Solutions
         * Falling into the Complexity Trap
@@ -48,21 +57,88 @@ Relation properties are stored in additional attributes that need not be indexed
         * Neglecting the Performance Impact
         * Missing Query Functionality
     * BeOS - The First Entity-Based Desktop
+        * "GraphOS"
         * Entities, not Files
         * Universal Interoperability through Custom Attributes
         * Metadata Queries
-* Introducing SEN - a modern minimalist user-centric approach
-    * Semantic ExteNsions for the Desktop
-    * Relations - the missing Link
-    * Haiku - the Perfect Prototyping Environment
-    * Just Add Magic - SEN API and Platform
-    * Desktop Use Cases and Examples
-* UNO - a Concept for an Universal NOtebook
-    * Simple but Semantic
-    * Features and Use Cases
-    * Presenting a Prototype
-* Outlook, Ongoing and Future Work
-    * Integrating Information Extraction and Document Analysis
-    * Building Dynamic Relations
-    * Rules and Inference of Relations and Attributes
-    * Further Desktop Extensions
+        * already very advanced user-centric, worked well in everyday use, but failed to gain enough traction to survive
+
+## Introducing SEN - a modern minimalist user-centric approach
+
+### Haiku - the Perfect Prototyping Environment
+
+* short description with references
+* picks up the GraphOS concepts from BeOS
+
+### Basic Architecture
+
+* system daemon, thin message-based API interacting with file system
+
+### Relations - the missing Link
+
+* corner stone of the proposed solution, storing relations between files, along with relation properties, in filesystem attributes:
+  * SEN_ID:
+  * SEN_REL_TARGETS:
+  * SEN_REL:<id>
+
+### Example PKG: Books, Authors and Publishers
+
+* simple graph from 3 entities: Book, Author and Publisher
+
+![Book Graph](images/book-graph.svg "a simple authoring graph")
+
+* File "Book.md":
+
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815 | SEN_REL:4711 | (standard file attributes)...
+|:---|:---|:---|:---|
+| 123 | 0815,4711 | *label:*authoredBy,*role:*author | *label:*publishedBy,*role:*publisher |
+
+* File "Gregor Rosenauer":
+
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123                   | (standard file attributes)... |
+|:-------|:----------------|:------------------------------|:------------------------------|
+| 0815   | 123             | *label:*authors,*role:*author |                               |
+
+* File "Writer's Block":
+
+| SEN_ID | SEN_REL_TARGETS | SEN_REL:123                        | (standard file attributes)... |
+|:-------|:----------------|:-----------------------------------|:------------------------------|
+| 4711   | 123             | *label:*publishes,*role:*publisher |                               |
+
+* another example with referencing documents and related annotations:
+
+* | SEN_ID | SEN_REL_TARGETS | SEN_REL:0815 | SEN_REL:4711 | (standard file attributes)...
+|:---|:---|:---|:---|
+
+
+* navigation through OS-supported filesystem queries, may be intercepted and enriched by SEN (resolving placeholders or allowing to search relations and their properties)
+
+## Desktop Use Cases and Examples - Re-modelling standard applications with SEN
+
+### Calendar
+
+* using Event files and Relations for connecting events based on sequence and time (navigating between recurring events or a daily/weekly agenda)
+* we can then build a simple "Today" view from a query for all Events on a given date, even filtered by tags or participating contacts, which are also files)
+
+### E-Mail
+
+### Notes: UNO - a Concept for an Universal NOtebook
+
+* Simple but Semantic
+* also suitable for story writing: characters, locations and story arch as (self-)references
+* Features and Use Cases - Authoring system (Relation Views for self-relations (structure, internal links to entities in the text) and external references)
+* Prototype Concept
+
+### Extending a Code Editor into an IDE
+
+* adding semantic structuring and navigation using SEN
+* self-relations for methods and classes
+* external relations for included files (C/C++) or referenced classes (Java imports)
+
+## Outlook, Ongoing and Future Work
+
+* Integrating Information Extraction and Document Analysis
+* Building Dynamic Relations: lazily evaluated when user navigates them, used for expensive and volatile relations e.g. for "similar" files
+* Rules and Inference of Relations and Attributes
+* Further Desktop Extensions:
+  * rich Tracker views, e.g. 2d-axis view for arranging items on a timeline, or by proximity etc.
