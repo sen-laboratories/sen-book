@@ -90,57 +90,136 @@
   * `SEN_REL_TARGETS`: comma-separated SEN_ID's of referenced files
   * `SEN_REL:\<ID>:\<LABEL>`: properties of relation with label 'LABEL' to target with SEN_ID 'ID' as a key/value map ('BMessage' type in Haiku)
 
+### Queries - resolving relations
+
+* Haiku natively supports queries on standard and custom filesystem attributes, so relation targets can be resolved 
+  by simply querying for files with a `SEN_REL_TARGETS` attribute that contains the `SEN_ID` of the relation source.
+  * e.g. for resolving all relations of type `contributesTo` of a file entity with `SEN_ID` of `0815`, the SEN server
+    executes a native filesystem query using the Haiku filesystem API to find all files with a `SEN_REL_TARGETS` attribute
+    containing the String `0815`, where multiple targets are simply comma-separated.
+* There is also a simple Query UI that allows users to enter queries through a search field and specify various options
+  to narrow down the query.
+* For better performance, attributes need to be indexed, so they can be found through queries.
+  * SEN only indices the `SEN_ID` and `SEN_TARGETS` field, but not attributes holding relation properties, to not
+    blow up the filesystem index more than absolutely necessary.
+  * This means that querying for relation properties is not directly supported by using filesystem queries (which will only
+    return matching relation targets regardless of their properties), but can be provided by the SEN API, filtering
+    property attributes of relation targets returned by the native query. This means a slight performance impact, but is not a primary use case and 
+    should be sufficiently fast for a fluid user experience (which is ensured by using an efficient naming scheme and 
+    structure for attribute values, as detailed below).
+
+### Mapping SEN's conceptual model to OS and desktop concepts
+
+* SEN realizes a simple form of ontologies through only using file system semantics and the OS filesystem API, adding
+  support for configuration, management and navigation of relations with a custom API on top.
+* *Ontologies* in SEN are comprised of:
+  * *Entities* and their *attributes* are defined through file types and their properties
+    * Configuration is already handled through a  well-defined OS file attribute `BEOS:TYPE` and a user-facing 
+      settings application
+    * The OS natively uses standard MIME types (MIME Types (IANA Media Types), 2022) for identifying the file types, as
+      described in Humdinger, B. (2009b).
+    * File name extensions as used in other operating systems are purely optional in Haiku, as the OS uses a MIME database 
+      and checks the file's type attribute for a match.
+    * The file type is detected by inspecting the file itself, using MIME type sniffing, e.g. parsing magic byes. 
+      Extensions are only a fallback, if all else fails.
+    * File attributes map to our Entity properties, see Humdinger, B. (2009a) for details and illustrations on how
+      this is realised in Haiku.
+    * (Melnikov, 2022) defines all officially registered MIME types, which provide a wide variety of media types
+      (and hence entity classes), but for desktop use, custom entity types can be defined as valid MIME types using the
+      `application/vnd.` namespace.
+  * *Relations* and their properties are not natively supported, so SEN uses a separate configuration to manage relations
+    and links them to Entities by storing MIME-types for relation source and target entities, as well as
+    default relation properties (custom properties could be added to the configuration or even individual relations, but
+    users should be encouraged to adhere to standard properties for ease of use and consistency).
+* SEN provides an API to filter suitable relations based on the source file type and relation configuration.
+* Applications use this API to provide a way for users to specify meaningful relations on files, and to display relations 
+  in a meaningful way.
+  * e.g., an extended version of Tracker uses the SEN API to resolve relations for a particular file and display them,
+    along with their properties, in a menu or separate window.
+  * an extended text editor may use the SEN API to query for related content and references
+    * e.g., self-references (like sections in a chapter or methods in source code)
+    * references to other text files, people, locations, concepts or media sources (like books, movies, or songs).
+
 ### Example PKG: Books, Authors and Publishers
 
-* simple graph from 3 entities: Book, Author and Publisher
+* simple graph from 3 entities: *Book*, *Author* and *Publisher*
+* the *Author* writes a *Book* that is published by a *Publisher* who pays the *Author*.
+* details about the relations (like date of publication, or amount of payment) are modelled as relationship attributes.
+* relation properties are stored in file attributes, prepended by the target ID, because properties are unique to a specific
+  relation.
+  * the naming scheme used, `SEN_REL:<target ID>:relation name`) allows for easy and fast detection of SEN relation properties
+  * properties themselves are stored as key/value pairs (using a `BMessage`, which is basically a hash map, and which
+    can be stored in and retrieved from file system attribute values by the native API)
+  * if a relation to a particular target has multiple properties of the same name, they are stored as a list, which
+    is also supported natively in `BMessage` objects.
 
 ![Book Graph](images/book-graph.svg "a simple authoring graph")
 
-* File "Book of SEN.md":
+* In this example, a book chapter is stored in a file named "Book of SEN.md".
+* The file is of type `text file` with MIME-type `text/markdown`, which represents a *Note* entity.
+* For this file type, SEN has registered a relation `authoredBy` with property `role`: 
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:0815:authoredBy | SEN_REL:4711:publishedBy  | (standard file attributes)... |
-|:-------|:----------------|:------------------------|:--------------------------|:------------------------------|
-| 123    | 0815,4711       | role:author             | role:publisher            |                               |
+|  BEOS:TYPE      | SEN_ID | SEN_REL_TARGETS | SEN_REL:0815:authoredBy | SEN_REL:4711:publishedBy | (standard file attributes)... |
+|:----------------|:-------|:----------------|:------------------------|:-------------------------|:------------------------------|
+| `text/markdown` | `123`  | `0815,4711`     | `role:author`           | `role:publisher`         |                               |
 
-* File "Gregor Rosenauer":
+* File "Gregor Rosenauer" of type `application/x-person`, which denotes a *Person* (this is actually not a registered MIME Type
+  but used by the OS, however SEN could define an alias to be used, which may also contain more attributes of a Person)
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:authors | (standard file attributes)... |
-|:-------|:----------------|:--------------------|:------------------------------|
-| 0815   | 123             | role:author         |                               |
+| BEOS:TYPE              | SEN_ID | SEN_REL_TARGETS | SEN_REL:123:authors | (standard file attributes)... |
+|:-----------------------|:-------|:----------------|:--------------------|:------------------------------|
+| `application/x-person` | `0815` | `123`           | `role:author`       |                               |
 
-* File "Writer's Block":
+* File "Writer's Block" of type `application/x-person`, which acts as a placeholder for an *Organisation* here
+  (for simplicity only, as there is no official MIME Type for Organisation, but since the semantics are slightly different,
+  e.g. in terms of employment relations, a separate type should be defined here):
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:publishes          | (standard file attributes)... |
-|:-------|:----------------|:-------------------------------|:------------------------------|
-| 4711   | 123             | role:publisher,date:01/12/2022 |                               |
+| BEOS:TYPE              | SEN_ID | SEN_REL_TARGETS | SEN_REL:123:publishes            | (standard file attributes)... |
+|:-----------------------|:-------|:----------------|:---------------------------------|:------------------------------|
+| `application/x-person` | `4711` | `123`           | `role:publisher,date:01/12/2022` |                               |
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:123:signs | SEN_REL:123:pays                     | (standard file attributes)... |
-|:-------|:----------------|:------------------|:-------------------------------------|:------------------------------|
-| 4711   | 0815            | date:31/12/2022   | amount:100 EUR,targetDate:31/12/2022 |                               |
+| BEOS:TYPE              | SEN_ID | SEN_REL_TARGETS | SEN_REL:123:signs | SEN_REL:123:pays                       | (standard file attributes)... |
+|:-----------------------|:-------|:----------------|:------------------|:---------------------------------------|:------------------------------|
+| `application/x-person` | `4711` | `0815`          | `date:31/12/2022` | `amount:100 EUR,targetDate:31/12/2022` |                               |
 
-* another example with referencing documents and related annotations:
+### Example: Notes and Annotations
+
+* This example uses *Note* entities referencing textual notes and related annotations:
 
 ![Notes Graph](images/text-annotation.svg "notes and annotations")
 
-* File "Lorem ipsum.txt":
+* File "Lorem ipsum.txt" of type `text/markdown` (representing a *Note* entity):
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:2412:annotatedBy | (standard file attributes)... |
-|:-------|:----------------|:-------------------------|:------------------------------|
-| 1130   | 2412            |                          |                               |
+| BEOS:TYPE       | SEN_ID | SEN_REL_TARGETS | SEN_REL:2412:annotatedBy | (standard file attributes)... |
+|:----------------|:-------|:----------------|:-------------------------|:------------------------------|
+| `text/markdown` | `1130` | `2412`          |                          |                               |
 
-| SEN_ID | SEN_REL_TARGETS | SEN_REL:1130:annotates      | (standard file attributes)... |
-|:-------|:----------------|:----------------------------|:------------------------------|
-| 2412   | 1130            | offsetStart:65,offsetEnd:79 |                               |
+* File "Annotation.txt" of type `text/markdown` (also a *Note* entity) references a particular passage of text
+  in the file above
+* the text range is provided as relationship attributes `offsetStart` and `offsetEnd`
 
-* navigation through OS-supported filesystem queries, may be intercepted and enriched by SEN (resolving placeholders or allowing to search relations and their properties)
+| BEOS:TYPE       | SEN_ID | SEN_REL_TARGETS | SEN_REL:1130:annotates        | (standard file attributes)... |
+|:----------------|:-------|:----------------|:------------------------------|:------------------------------|
+| `text/markdown` | `2412` | `1130`          | `offsetStart:65,offsetEnd:79` |                               |
 
 ## Desktop Use Cases and Examples - Re-modelling standard applications with SEN
+
+### Base Concepts
+
+* Files as Entities
+* Relations grouped by role (Attendee, Contributor) or relation label (attendedBy, contributedBy)
+* UI: in Haiku (as in BeOS), it is a common desktop metaphor to have clickable menus, e.g. clicking on a folder item 
+  in the "Copy" menu will open that folder in a new window.
+  * The same metaphor is used for navigating relations: clicking on a sub menu in the "Open Related..." menu will open
+    all targets of that relation in a separate window:
 
 ### Calendar
 
 * using Event files and Relations for connecting events based on sequence and time (navigating between recurring events or a daily/weekly agenda)
 * we can then build a simple "Today" view from a query for all Events on a given date, even filtered by tags or participating contacts, which are also files)
   * clicking on a "calendar" icon in the desk bar (application launcher and info panel) would open a Tracker window with all event files having an event date of today.
+
+* ![Calendar Event Browser](images/calendar-browser.svg "browsing calendar entries")
   
 ### E-Mail
 
@@ -151,7 +230,7 @@
 * Features and Use Cases - Authoring system (Relation Views for self-relations (structure, internal links to entities in the text) and external references)
 * Prototype Concept:
 
-![Semantic Editor](images/editor-entities.svg "semantic editor with NER built-in")
+![Semantic Editor](images/editor-ner.png "semantic editor with NER built-in")
 
 * in the file-browser, all extracted entities can be browsed by navigating the file's relations:
 
@@ -185,7 +264,15 @@
 
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
 
+* Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
+
+* Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
+
+* Melnikov, A. (2022). IANA Media Types. Internet Assigned Numbers Authority. https://www.iana.org/assignments/media-types/media-types.xhtml
+
 * Matuschak, A. (n.d.). Evergreen Notes. Andy’s Working Notes. https://notes.andymatuschak.org/z4SDCZQeRo4xFEQ8H4qrSqd68ucpgE6LU155C
+
+* MIME types (IANA media types). (2022). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
 
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
 
