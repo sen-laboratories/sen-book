@@ -3,19 +3,12 @@
 ## Motivation and Vision Statement
 
 * Although the idea behind personal knowledge graphs dates back to the 1960s with the now famous Zettelkasten method by Luhmann [xx](yy), it only became popular in recent years with the introduction of connected note taking tools like Evernote, Notion, Roam or Obdisian, to name only a few.
-
 * On the other hand, there is raising criticism in the usefulness of this approach [xxx](yy), as a graph does not make one any wiser per se, and connections alone do not bring much new insights beyond the fact that the linked information is connected somehow. Without an additional classification on how and why some bits of information are connected, users cannot gather meaningful output, as they cannot navigate and query based on the depth of knowledge they gathered, confined to see only on shallow connections on the surface.
-
 * Also, not everything can or should be captured in note-taking applications and handled via cloud services, as sophisticated as they may have become.
-
   * current linked note-management applications mostly rely on simple tagging, which looses semantics and restricts later search and navigation.
-
   * cloud providers either charge recurring fees or utilize user data, which can even pose a threat to users in unsafe environments and is not suitable for sensitive or business data (possible infringement of intellectual property, transfer of copyright to the provider, etc.).
-  
 * A lot of valuable information is still locally stored on personal desktop systems in the form of carefully selected documents, ebooks, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, concepts, or drafts.
-
 * personal knowledge graphs should also cover all kinds of information, not only document or media entities, but also various communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and highly connected to personal data and work that derives from it.
-
 * A truly personal knowledge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing information, understand its connections, make them visible to the user and allow to navigate and query it.
 
 ## A Vision for a Personal Knowledge Graph based on the Semantic Desktop
@@ -23,21 +16,13 @@
 -- Wise up your Workspace - Why a Personal Knowledge Graph should live in your File System
 
 * The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic filesystem, with attributes and relations built-in.
-
 * Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query for them (there is an experimental patch to make the `find` command support this <<REF!>>), and there is no support for relations, reducing their use to static metadata for display in info panels.
-
 * Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
-
 * More ambitious efforts in file system development failed because of similar complexity [](WinFS), trying to integrate a full-fledged database into a desktop OS intended for everyday use.
-
 * So an ideal solution should be lightweight and integrate transparently and naturally with the desktop the user knows and operates daily, built on a file system that supports semantic queries or can be extended with minimum overhead.
-
 * SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastructure and API already provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations have been omitted because the original creators of BeOS identified the same fallacies outlined above (the first version of the OS still had a Table and Relations API though).
-
 * SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very thin, message-based API to bridge this extension of the base OS.
-
 * For performance, any file that is part of a relation gets a unique and stable identifier (like an object ID), and relations reference this ID in a single custom attribute. Because both the object ID of the source (file) and the relation IDs of the target files are stored in indexed attributes, they can be queried very efficiently.
-
 * Relation properties are stored in additional attributes that need not be indexed, as they are retrieved on demand in near real time. They are stored in separate attributes as a map of relation property key/values for each relation.
 
 ## How to Build it: The Pillars of the Proposed Solution
@@ -75,8 +60,18 @@
 ### Haiku - the Perfect Prototyping Environment
 
 * short description with references
+* A good introduction to Haiku OS and its still innovative concepts utilised by SEN can be found in (Revol, 2017).
+  * (Google, 2007) provides an insightful presentation with the Ex-CEO of Be, Inc., who created BeOS, the original
+    commercial OS created in 1996 after which Haiku is modelled.
+* components used by SEN:
+  * Tracker
+  * FileTypes
+* mapping SEN concepts
+  * File types
+  * Attributes
+  * Queries
 * picks up concepts from BeOS for filesystem based metadata handling and search
-* see also Graph/Entity OS by Alexander Obenauer
+* see also (Alexander Obenauer, 2021) for related concepts of a "GraphOS" that puts entities first
 
 ### Basic Architecture
 
@@ -104,9 +99,10 @@
     blow up the filesystem index more than absolutely necessary.
   * This means that querying for relation properties is not directly supported by using filesystem queries (which will only
     return matching relation targets regardless of their properties), but can be provided by the SEN API, filtering
-    property attributes of relation targets returned by the native query. This means a slight performance impact, but is not a primary use case and 
-    should be sufficiently fast for a fluid user experience (which is ensured by using an efficient naming scheme and 
-    structure for attribute values, as detailed below).
+    property attributes of relation targets returned by the native query.
+    While this introduces a slight performance impact, it is an acceptable and deliberate compromise, as this is not a 
+    primary use case and should still be sufficiently fast for a fluid user experience (which is ensured by using an 
+    efficient naming scheme and structure for attribute values, as detailed below).
 
 ### Mapping SEN's conceptual model to OS and desktop concepts
 
@@ -213,6 +209,24 @@
   * The same metaphor is used for navigating relations: clicking on a sub menu in the "Open Related..." menu will open
     all targets of that relation in a separate window:
 
+### Navigating Relations in Tracker
+
+* Because SEN is very user-centric and should not be limited to experts and knowledge workers, the standard file browser,
+  Tracker, is extended (with minimal modifications) so that relations are visible in the context menu, and users can
+  open related files just as they would with normal files.
+* A special case is the display of all related files for a given relation - here, SEN uses a special "virtual" folder
+  (similar to dynamic queries !!ref) to hold relation targets:
+  * Since also menus (holding sub menus) can be invoked in Haiku, users are accustomed to this behavior.
+  * When invoking a "related entities" menu, the adapted Tracker calls the SEN API to create and return a reference to
+    a special, temporary folder holding all targets of the selected relation.
+  * These targets are symbolic links acting as placeholders for the related files. SEN stores relation properties
+    as filesystem attributes in these links.
+  * The folder is configured to show all relation property attributes, so that the user can view and handle them just
+    like normal file properties, rearranging and sorting them as needed.
+* The figure below shows a simple example of how users could navigate all references of a research paper stored as text file,
+  where references are also accessible as documents in the filesystem:
+* ![Relation Browser](images/tracker-relations.svg "browsing relation targets and their properties")
+
 ### Calendar
 
 * using Event files and Relations for connecting events based on sequence and time (navigating between recurring events or a daily/weekly agenda)
@@ -220,7 +234,7 @@
   * clicking on a "calendar" icon in the desk bar (application launcher and info panel) would open a Tracker window with all event files having an event date of today.
 
 * ![Calendar Event Browser](images/calendar-browser.svg "browsing calendar entries")
-  
+
 ### E-Mail
 
 ### Notes: UNO - a Concept for a Universal NOtebook
@@ -235,7 +249,6 @@
 * in the file-browser, all extracted entities can be browsed by navigating the file's relations:
 
 ![Browsing Relations](images/file-browser-relations.svg "navigating document relations in the file browser")
-
 
 ### Extending a Code Editor into an IDE
 
@@ -264,6 +277,8 @@
 
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
 
+* Google. (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
+
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
 
 * Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
@@ -273,6 +288,8 @@
 * Matuschak, A. (n.d.). Evergreen Notes. Andy’s Working Notes. https://notes.andymatuschak.org/z4SDCZQeRo4xFEQ8H4qrSqd68ucpgE6LU155C
 
 * MIME types (IANA media types). (2022). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+
+* Revol, F. (2017, February 7). Haiku, a desktop you can still learn from. https://archive.fosdem.org/2017/schedule/event/desktops_haiku_desktop_still_learn_from/attachments/slides/1826/export/events/attachments/desktops_haiku_desktop_still_learn_from/slides/1826/FR_FOSDEM2017_Haiku.pdf
 
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
 
