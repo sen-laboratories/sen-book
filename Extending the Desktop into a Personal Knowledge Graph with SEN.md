@@ -229,7 +229,7 @@
   * these semantically enriched relation properties can then be used to *navigate* the relation, e.g. through a special
     `RelationNavigator` service provided by the SEN API, which "opens" supported relations in a suitable way, e.g.
     by opening a PDF viewer and jumping to the given page, or by opening a web browser and highlighting the text referenced
-    provided in the "WebAnnotation" relation property.
+    provided in the "WebAnnotation" relation property as a standard WebAnnotation, se (Sporny, 2020).
   * this kind of "desktop deep linking" is supported through the extended scripting functionality in Haiku, which provides
     a message-based extension mechanism for controlling various aspects of the system itself, and applications.
   * there are well-defined standard Messages for simple operations like `OPEN` or `CLOSE`, but applications can support
@@ -307,6 +307,8 @@
 * Revol, F. (2017, February 7). Haiku, a desktop you can still learn from. https://archive.fosdem.org/2017/schedule/event/desktops_haiku_desktop_still_learn_from/attachments/slides/1826/export/events/attachments/desktops_haiku_desktop_still_learn_from/slides/1826/FR_FOSDEM2017_Haiku.pdf
 
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
+
+* Sporny, M. (2020, July 16). JSON-LD 1.1. https://www.w3.org/TR/json-ld/
 
 * Telburt, J. (2022, February 16). Data Speaks for Itself: Data Littering. The Data Administration Newsletter. https://tdan.com/data-speaks-for-itself-data-littering/29122
 
