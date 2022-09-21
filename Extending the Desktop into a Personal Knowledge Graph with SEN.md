@@ -209,11 +209,11 @@
   * The same metaphor is used for navigating relations: clicking on a sub menu in the "Open Related..." menu will open
     all targets of that relation in a separate window:
 
-### Navigating Relations in Tracker
+### Visualising and Navigating Relations in Tracker
 
 * Because SEN is very user-centric and should not be limited to experts and knowledge workers, the standard file browser,
   Tracker, is extended (with minimal modifications) so that relations are visible in the context menu, and users can
-  open related files just as they would with normal files.
+  open related files just as they would with normal files, but with some added functionality to support semantic relations.
 * A special case is the display of all related files for a given relation - here, SEN uses a special "virtual" folder
   (similar to dynamic queries !!ref) to hold relation targets:
   * Since also menus (holding sub menus) can be invoked in Haiku, users are accustomed to this behavior.
@@ -223,8 +223,23 @@
     as filesystem attributes in these links.
   * The folder is configured to show all relation property attributes, so that the user can view and handle them just
     like normal file properties, rearranging and sorting them as needed.
-* The figure below shows a simple example of how users could navigate all references of a research paper stored as text file,
-  where references are also accessible as documents in the filesystem:
+  * relation properties may be in any format that is best suited for the purpose, from different data types (names,
+    numbers or dates) to individual representations like JSON-LD for WebAnnotations (attached to web links) or
+    time codes for referencing a specific section in a video.
+  * these semantically enriched relation properties can then be used to *navigate* the relation, e.g. through a special
+    `RelationNavigator` service provided by the SEN API, which "opens" supported relations in a suitable way, e.g.
+    by opening a PDF viewer and jumping to the given page, or by opening a web browser and highlighting the text referenced
+    provided in the "WebAnnotation" relation property.
+  * this kind of "desktop deep linking" is supported through the extended scripting functionality in Haiku, which provides
+    a message-based extension mechanism for controlling various aspects of the system itself, and applications.
+  * there are well-defined standard Messages for simple operations like `OPEN` or `CLOSE`, but applications can support
+    any kind of custom messages, which can then be bundled in the form of "scripting suites".
+  * to support the kind of navigation above, the standard PDF viewer needs to be extended to support opening a file
+    on a given page (e.g., by adding a property `page` to the standard `OPEN`  message already supported), or the 
+    web browser needs to support WebAnnotations and a way to show them for a given URL in a similar way, e.g.,
+    using an additional attribute like `annotation` for the `OPEN` message.
+* The figure below shows a simplified example of how users could navigate all references of a research paper stored as 
+  different file types to represent related entities like web pages, PDF documents or video presentations.
 * ![Relation Browser](images/tracker-relations.svg "browsing relation targets and their properties")
 
 ### Calendar
@@ -296,3 +311,5 @@
 * Telburt, J. (2022, February 16). Data Speaks for Itself: Data Littering. The Data Administration Newsletter. https://tdan.com/data-speaks-for-itself-data-littering/29122
 
 * Vef, M.-A., Steiner, R., Salkhordeh, R., Steinkamp, J., Vennetier, F., Smigielski, J.-F., & Brinkmann, A. (2020). DelveFS - An Event-Driven Semantic File System for Object Stores. 2020 IEEE International Conference on Cluster Computing (CLUSTER), 35–46. https://doi.org/10.1109/CLUSTER49012.2020.00014
+
+* W3C. (n.d.). WebAnnotation Home. WebAnnotation: Retrieved September 21, 2022, from http://webannotation.org/
