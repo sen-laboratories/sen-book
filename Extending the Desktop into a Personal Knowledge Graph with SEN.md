@@ -145,9 +145,9 @@
   relation.
   * the naming scheme used, `SEN_REL:<target ID>:relation name`) allows for easy and fast detection of SEN relation properties
   * properties themselves are stored as key/value pairs (using a `BMessage`, which is basically a hash map, and which
-    can be stored in and retrieved from file system attribute values by the native API)
-  * if a relation to a particular target has multiple properties of the same name, they are stored as a list, which
-    is also supported natively in `BMessage` objects.
+    can be stored in and retrieved from file system attribute values by the native API, see (Haiku, 2022))
+  * if a relation to a particular target has multiple properties of the same name, e.g. references to several locations
+    in the same book, they are grouped and stored as a list, which is also supported natively by `BMessage` objects.
 
 ![Book Graph](images/book-graph.svg "a simple authoring graph")
 
@@ -198,6 +198,23 @@
 |:----------------|:-------|:----------------|:------------------------------|:------------------------------|
 | `text/markdown` | `2412` | `1130`          | `offsetStart:65,offsetEnd:79` |                               |
 
+### Ternary Relations
+
+* A special case but also an important use case is the support for ternary relations, that is when 3 entities are
+  part of a relation.
+* An example would be, extending the notes example above, relations between notes on a movie referencing actors
+  that appear in certain scenes, or locations on specific time codes:
+
+![Ternary Relations](images/ternary-relation.svg "supporting ternary relations")
+
+* To cover this case, and staying consistent with the "relationships as properties" concept established above,
+  we can store references to other entities along with normal relationship properties, but with special semantics,
+  e.g. using a reserved label `SEN_ID` as property key, and the ID of the target entity as property value.
+* For differentiating properties of ternary relations, however, one more abstraction is required, so we need to
+  wrap them into separate, nested `BMessage` objects inside the `BMessage` holding our normal properties, as outlined above.
+* This would also cover the case of having multiple references to a single entity with different properties, e.g.
+  the same actor in different scenes, or the same location at different time codes.
+
 ## Desktop Use Cases and Examples - Re-modelling standard applications with SEN
 
 ### Base Concepts
@@ -238,8 +255,8 @@
     on a given page (e.g., by adding a property `page` to the standard `OPEN`  message already supported), or the 
     web browser needs to support WebAnnotations and a way to show them for a given URL in a similar way, e.g.,
     using an additional attribute like `annotation` for the `OPEN` message.
-* The figure below shows a simplified example of how users could navigate all references of a research paper stored as 
-  different file types to represent related entities like web pages, PDF documents or video presentations.
+* The figure below shows a simplified example of how users could navigate all references of a research paper or lecture
+  note, stored as different file types to represent related entities like web pages, PDF documents, books, or video presentations:
 * ![Relation Browser](images/tracker-relations.svg "browsing relation targets and their properties")
 
 ### Calendar
@@ -247,7 +264,6 @@
 * using Event files and Relations for connecting events based on sequence and time (navigating between recurring events or a daily/weekly agenda)
 * we can then build a simple "Today" view from a query for all Events on a given date, even filtered by tags or participating contacts, which are also files)
   * clicking on a "calendar" icon in the desk bar (application launcher and info panel) would open a Tracker window with all event files having an event date of today.
-
 * ![Calendar Event Browser](images/calendar-browser.svg "browsing calendar entries")
 
 ### E-Mail
@@ -258,11 +274,9 @@
 * also suitable for story writing: characters, locations and story arch as (self-)references
 * Features and Use Cases - Authoring system (Relation Views for self-relations (structure, internal links to entities in the text) and external references)
 * Prototype Concept:
-
 ![Semantic Editor](images/editor-ner.png "semantic editor with NER built-in")
 
 * in the file-browser, all extracted entities can be browsed by navigating the file's relations:
-
 ![Browsing Relations](images/file-browser-relations.svg "navigating document relations in the file browser")
 
 ### Extending a Code Editor into an IDE
@@ -271,6 +285,9 @@
 * self-relations for, e.g., methods and classes
 * external relations for included files (C/C++) or referenced classes (Java imports)
 * can be realised on top of existing application(s) using SEN API, or even (more as a showcase) using the SEN enabled file browser.
+* example:
+
+![SEN-IDE](images/sen-ide.svg "an IDE utilising the SEN API")
 
 ## Outlook, Ongoing and Future Work
 
@@ -293,6 +310,8 @@
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
 
 * Google. (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
+
+* Haiku, V. (2022). The Haiku Book: Messaging Foundations. Retrieved September 25, 2022, from https://www.haiku-os.org/docs/api/app_messaging.html
 
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
 
