@@ -104,7 +104,7 @@
     primary use case and should still be sufficiently fast for a fluid user experience (which is ensured by using an 
     efficient naming scheme and structure for attribute values, as detailed below).
 
-### Mapping SEN's conceptual model to OS and desktop concepts
+### Mapping the conceptual model of SEN to OS and desktop concepts
 
 * SEN realizes a simple form of ontologies through only using file system semantics and the OS filesystem API, adding
   support for configuration, management and navigation of relations with a custom API on top.
@@ -127,7 +127,21 @@
     and links them to Entities by storing MIME-types for relation source and target entities, as well as
     default relation properties (custom properties could be added to the configuration or even individual relations, but
     users should be encouraged to adhere to standard properties for ease of use and consistency).
-* SEN provides an API to filter suitable relations based on the source file type and relation configuration.
+  * a formal *Schema* is deliberately not endorsed to keep the system practical and approachable for non-expert users,
+    who might not be familiar with semantic concepts. SEN tries to lower the barrier to entry and bring semantics to the
+    average desktop user. However, *Relations* and *FileTypes* may be defined by more advanced users and even bundled with SEN,
+    sot hat reuse, exchange and interoperability is maximized. E.g., as mentioned above, file types should use standard
+    *MIME* types, and file attributes used for properties, as well as relation names and attributes, should stick to 
+    established standards like (schema.org, 2022), including their syntax and semantics, as far as possible, so they can 
+    be interpreted in a common way by plugins (such as `Extractors` XXX, which can then use common attribute names to 
+    store extracted information, which can then be easily picked up by other SEN services or applications), and
+    `RelationHelpers`, which can then rely on common attributes for navigation and highlighting.
+  * E.g., [Book](https://schema.org/Book) should be used as a reference for Book entities in SEN. The well-defined attribute
+    `keywords` can then be used by `Extractor` plugins to store tags and keywords extracted from documents, and the
+    standard [startOffset](https://schema.org/startOffset) attribute is used for navigating to a specific position.
+  * Schema.org defines a set of [standard properties](https://schema.org/Property) that SEN tries to adhere to. 
+* for internal use, but also for interaction with desktop applications, SEN provides an API to filter suitable relations 
+  based on the source file type and relation configuration.
 * Applications use this API to provide a way for users to specify meaningful relations on files, and to display relations 
   in a meaningful way.
   * e.g., an extended version of Tracker uses the SEN API to resolve relations for a particular file and display them,
@@ -258,6 +272,20 @@
 * The figure below shows a simplified example of how users could navigate all references of a research paper or lecture
   note, stored as different file types to represent related entities like web pages, PDF documents, books, or video presentations:
 * ![Relation Browser](images/tracker-relations.svg "browsing relation targets and their properties")
+* For ternary relations, we need to extend this concept and add another level, i.e. through a folder inside the virtual 
+  folder, that holds all relation properties from the source entity to the 3rd entity involved in the relation.
+  * e.g., for references from an annotation to a paper that references another author in several ways and on several pages,
+    SEN would create a folder "<Paper> Relations to <Author>" inside the virtual folder "<Annotation> relations to <Paper>".
+  * this nested folder would then hold all references with label and page number as file attributes, shown in columns
+    (without actual file types or targets, since the file (type) will always be the relation source, and the target is
+    always the third entity involved), e.g.:
+  
+| Label      | Page |
+|:-----------|:-----|
+| quotes     | 2    |
+| references | 4    |
+| associates | 7    |
+* [[Fig]].{14}.{13}.{This table illustrates a nested folder showing all outgoing links and properties of a ternary relation.}
 
 ### Calendar
 
@@ -275,9 +303,10 @@
 * Features and Use Cases - Authoring system (Relation Views for self-relations (structure, internal links to entities in the text) and external references)
 * Prototype Concept:
 ![Semantic Editor](images/editor-ner.png "semantic editor with NER built-in")
-
-* in the file-browser, all extracted entities can be browsed by navigating the file's relations:
+* as outlined above, all extracted entities can also be browsed by navigating the text file's relations in the file browser:
 ![Browsing Relations](images/file-browser-relations.svg "navigating document relations in the file browser")
+  * for ternary relations, as mentioned above, we need to extend this concept and add another level, i.e. a folder, to
+    hold all relation properties to the 3rd entity involved in the relation:
 
 ### Extending a Code Editor into an IDE
 
@@ -324,6 +353,8 @@
 * MIME types (IANA media types). (2022). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
 
 * Revol, F. (2017, February 7). Haiku, a desktop you can still learn from. https://archive.fosdem.org/2017/schedule/event/desktops_haiku_desktop_still_learn_from/attachments/slides/1826/export/events/attachments/desktops_haiku_desktop_still_learn_from/slides/1826/FR_FOSDEM2017_Haiku.pdf
+
+* schema.org, V. (2022, March 17). Schema.org—Schemas—Schema.org. https://schema.org/docs/schemas.html
 
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
 
