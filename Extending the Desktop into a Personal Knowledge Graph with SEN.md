@@ -2,28 +2,60 @@
 
 ## Motivation and Vision Statement
 
-* Although the idea behind personal knowledge graphs dates back to the 1960s with the now famous Zettelkasten method by Luhmann [xx](yy), it only became popular in recent years with the introduction of connected note taking tools like Evernote, Notion, Roam or Obdisian, to name only a few.
-* On the other hand, there is raising criticism in the usefulness of this approach [xxx](yy), as a graph does not make one any wiser per se, and connections alone do not bring much new insights beyond the fact that the linked information is connected somehow. Without an additional classification on how and why some bits of information are connected, users cannot gather meaningful output, as they cannot navigate and query based on the depth of knowledge they gathered, confined to see only on shallow connections on the surface.
+* Although the idea behind personal knowledge graphs dates back to the 1960s with the now famous Zettelkasten method by
+  Luhmann (Schmidt, 2018), it only became popular in recent years with the introduction of connected note-taking tools 
+  like Evernote, Notion, Roam (and its open source cousin Foam (foambubble, 2022)) or Obdisian, to name only a few.
+* On the other hand, there is also valid criticism in the usefulness of this approach (see chapter 9 in this book on
+  "A decentralised social network of Solid-based second brains" by Mathew Lowry), as a graph does not make one any wiser 
+  per se, and connections alone do not bring much new insights beyond the fact that the linked information is connected somehow.
+  Also, current systems of this kind only use tagging, which is the simplest form of classification, but does not hold
+  any deeper semantics to allow meaningful identification of entities and their properties and relations.
+  Without an additional classification on how and why some bits of information are connected, users cannot gather meaningful output,
+  as they cannot navigate and query based on the depth of knowledge they gathered, confined to see only on shallow,
+  labelled connections on the surface.
 * Also, not everything can or should be captured in note-taking applications and handled via cloud services, as sophisticated as they may have become.
-  * current linked note-management applications mostly rely on simple tagging, which looses semantics and restricts later search and navigation.
-  * cloud providers either charge recurring fees or utilize user data, which can even pose a threat to users in unsafe environments and is not suitable for sensitive or business data (possible infringement of intellectual property, transfer of copyright to the provider, etc.).
-* A lot of valuable information is still locally stored on personal desktop systems in the form of carefully selected documents, ebooks, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, concepts, or drafts.
-* personal knowledge graphs should also cover all kinds of information, not only document or media entities, but also various communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and highly connected to personal data and work that derives from it.
-* A truly personal knowledge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing information, understand its connections, make them visible to the user and allow to navigate and query it.
+  * these services limit what users can do with their data, and without the service, which is bound to a single vendor,
+    the data mey become inaccessible or unusable, at least connections and navigation are then lost.
+  * cloud providers either charge recurring fees or utilize user data, which can even pose a threat to users in unsafe 
+    environments (like journalism or activism), and is not suitable for sensitive or business data (possible infringement 
+    of intellectual property, transfer of copyright to the provider, etc.).
+* A lot of valuable information is still locally stored on personal desktop systems in the form of carefully selected documents, 
+  ebooks, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, concepts, or drafts.
+* personal knowledge graphs should also cover all kinds of information, not only document or media entities, but also various 
+  communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and 
+  highly connected to personal data and work that derives from it.
+* A truly personal knowledge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing
+  information, understand its connections, make them visible to the user and allow to navigate and query it.
 
 ## A Vision for a Personal Knowledge Graph based on the Semantic Desktop
 
 -- Wise up your Workspace - Why a Personal Knowledge Graph should live in your File System
 
-* The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic filesystem, with attributes and relations built-in.
-* Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query for them (there is an experimental patch to make the `find` command support this <<REF!>>), and there is no support for relations, reducing their use to static metadata for display in info panels.
-* Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
-* More ambitious efforts in file system development failed because of similar complexity [](WinFS), trying to integrate a full-fledged database into a desktop OS intended for everyday use.
-* So an ideal solution should be lightweight and integrate transparently and naturally with the desktop the user knows and operates daily, built on a file system that supports semantic queries or can be extended with minimum overhead.
-* SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastructure and API already provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations have been omitted because the original creators of BeOS identified the same fallacies outlined above (the first version of the OS still had a Table and Relations API though).
-* SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very thin, message-based API to bridge this extension of the base OS.
-* For performance, any file that is part of a relation gets a unique and stable identifier (like an object ID), and relations reference this ID in a single custom attribute. Because both the object ID of the source (file) and the relation IDs of the target files are stored in indexed attributes, they can be queried very efficiently.
-* Relation properties are stored in additional attributes that need not be indexed, as they are retrieved on demand in near real time. They are stored in separate attributes as a map of relation property key/values for each relation.
+* The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic 
+  filesystem, with attributes and relations built-in.
+* Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query 
+  for them (there is an experimental patch to make the `find` command support this <<REF!>>), and there is no support for
+  relations, reducing their use to static metadata for display in info panels.
+* Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, 
+  current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead 
+  and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web 
+  than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
+* More ambitious efforts in file system development failed because of similar complexity, trying to integrate
+  a full-fledged database into a desktop OS intended for everyday use (see "History" section below).
+* So an ideal solution should be lightweight and integrate transparently and naturally with the desktop the user knows 
+  and operates daily, built on a file system that supports semantic queries or can be extended with minimum overhead.
+* SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastructure and API already 
+  provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the 
+  type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations 
+  have been omitted because the original creators of BeOS identified the same fallacies outlined above (the first version
+  of the OS still had a Table and Relations API though).
+* SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very 
+  thin, message-based API to bridge this extension of the base OS.
+* For performance, any file that is part of a relation gets a unique and stable identifier (like an Object ID in a 
+  document management system or database), and relations reference this ID in a single custom attribute. Because both the 
+  Object ID of the source (file) and the relation IDs of the target files are stored in indexed attributes, they can be queried very efficiently.
+* Relation properties are stored in additional attributes that need not be indexed, as they are retrieved on demand in near 
+  real time. They are stored in separate attributes as a map of relation property key/values for each relation.
 
 ## How to Build it: The Pillars of the Proposed Solution
 
@@ -41,47 +73,63 @@
     * The Role of Metadata in Filesystem Design - From Acorn to UNIX
     basic support and OS usage of metadata was already there in the 1990s, cf Amiga FileNotes used in web browser IBrowse for storing originating web site for downloads
     * Promising Concepts: Nepomuk and Baloo
-    * Problems with Current Solutions
+* also tried in mainstream OS but failed, see Microsoft's WinFS (LSoft Technologies Inc., 2022), see also a critical but 
+  insightful discussion in (Orlowski, 2002) by the developers of the more successful and actually realised BeOS File System BFS, see below.
+* Problems with Current Solutions
         * Falling into the Complexity Trap
             * Applying Semantic Web Standards to the Desktop
             many projects failed because they tried to build the entire complexity of the semantic web for personal knowledgge graphs, which is not really feasible or sustainable, see e.g. https://www.gnu.org/software/gnowsys/
             * Leaky Abstractions: Missing Usability
         * Neglecting the Performance Impact
         * Missing Query Functionality
-    * BeOS - The First Entity-Based Desktop
-        * "GraphOS"
-        * Entities, not Files
-        * Universal Interoperability through Custom Attributes
-        * Metadata Queries
-        * already very advanced user-centric, worked well in everyday use, but failed to gain enough traction to survive
+
+### BeOS - The First Semantic Desktop OS
+
+* history (Pinheiro, 2020)
+* Entities, not Files
+* Universal Interoperability through Custom Attributes - no specialised applications needed for simple CRUD operations
+* Metadata Queries
+* already very advanced user-centric, worked well in everyday use, but failed to gain enough traction to survive
+* rather unknown niche OS, but closest to the "GraphOS" outlined in (Alexander Obenauer, 2021), which proposes an "entity-first"
+  operating system with related concepts:
+> In the Graph OS, all of your things are within your system as nodes, or items, within your graph. Emails, calendar events,
+> articles, web pages, podcast episodes, to do lists as well as the to dos inside them; everything. And each thing may have
+> references to, or be referenced by, any other thing.
 
 ## Introducing SEN - a modern minimalist user-centric approach
+
+* BeOS already supported a lot of use cases for a semantic desktop, as can be seen in the workshop provided in Humdinger, B. (2019)
+* However, to keep the system and API design simple and efficient, a necessity in the time of its making (late 1990s),
+  the concept of relations was deliberately omitted completely.
 
 ### Haiku - the Perfect Prototyping Environment
 
 * short description with references
 * A good introduction to Haiku OS and its still innovative concepts utilised by SEN can be found in (Revol, 2017).
-  * (Google, 2007) provides an insightful presentation with the Ex-CEO of Be, Inc., who created BeOS, the original
-    commercial OS created in 1996 after which Haiku is modelled.
+* (Google, 2007) provides an insightful presentation with the Ex-CEO of Be, Inc., who created BeOS, the original
+  commercial OS created in 1996 after which Haiku is modelled.
 * components used by SEN:
   * Tracker
   * FileTypes
+  * Filesystem API
 * mapping SEN concepts
   * File types
   * Attributes
   * Queries
 * picks up concepts from BeOS for filesystem based metadata handling and search
-* see also (Alexander Obenauer, 2021) for related concepts of a "GraphOS" that puts entities first
 
 ### Basic Architecture
 
-* system daemon and core implementation for interacting with file system
+* system daemon and core implementation for interacting with file system, integrating with existing OS components, API's
+  and applications like the file browser "Tracker" and the desktop search "Query" application:
+![SEN-Haiku Integration](images/sen-os-app-integration.svg "simple overview on integration of SEN into Haiku")
+
 * thin message-based API for integrating with applications including the standard file browser (called "Tracker" in Haiku)
 
 ### Relations - the missing Link
 
 * corner stone of the proposed solution, storing relations between files, along with relation properties, in filesystem attributes:
-  * `SEN_ID`: unique ID (like an Object ID in document storage systems), simplified as small numbers below, but is really a UUID.
+  * `SEN_ID`: a unique ID (like an Object ID in document storage systems), simplified as small numbers below, but is really a UUID (dashes could be omitted for compactness).
   * `SEN_REL_TARGETS`: comma-separated SEN_ID's of referenced files
   * `SEN_REL:\<ID>:\<LABEL>`: properties of relation with label 'LABEL' to target with SEN_ID 'ID' as a key/value map ('BMessage' type in Haiku)
 
@@ -132,10 +180,10 @@
     average desktop user. However, *Relations* and *FileTypes* may be defined by more advanced users and even bundled with SEN,
     sot hat reuse, exchange and interoperability is maximized. E.g., as mentioned above, file types should use standard
     *MIME* types, and file attributes used for properties, as well as relation names and attributes, should stick to 
-    established standards like (schema.org, 2022), including their syntax and semantics, as far as possible, so they can 
-    be interpreted in a common way by plugins (such as `Extractors` XXX, which can then use common attribute names to 
-    store extracted information, which can then be easily picked up by other SEN services or applications), and
-    `RelationHelpers`, which can then rely on common attributes for navigation and highlighting.
+    established standards like (schema.org, 2022) or Wikidata (Wikidata, 2019), including their syntax and semantics, 
+    as far as possible, so they can be interpreted in a common way by plugins (such as `Extractors` XXX, which can then
+    use common attribute names to store extracted information, which can then be easily picked up by other SEN services 
+    or applications), and `RelationHelpers`, which can then rely on common attributes for navigation and highlighting.
   * E.g., [Book](https://schema.org/Book) should be used as a reference for Book entities in SEN. The well-defined attribute
     `keywords` can then be used by `Extractor` plugins to store tags and keywords extracted from documents, and the
     standard [startOffset](https://schema.org/startOffset) attribute is used for navigating to a specific position.
@@ -328,40 +376,27 @@
 
 ## References
 
+* Access Co., Ltd. (n.d.). The Be Book—System Overview—The Application Kit. Retrieved September 28, 2022, from https://www.haiku-os.org/legacy-docs/bebook/TheApplicationKit_Scripting.html
 * Alexander Obenauer. (2021, August 21). The Graph OS. The Lab Notes. https://alexanderobenauer.com/labnotes/014/
-
 * Ames, A., Maltzahn, C., Bobb, N., Miller, E. L., Brandt, S. A., Neeman, A., Hiatt, A., & Tuteja, D. (2005). Richer File System Metadata Using Links and Attributes. 22nd IEEE / 13th NASA Goddard Conference on Mass Storage Systems and Technologies (MSST’05), 49–60. https://doi.org/10.1109/MSST.2005.28
-
 * Berman, J. J. (2022). Classification made relevant how scientists build and use classifications and ontologies. Academic Press.
-
+* Bushnell, T. (2015, March 8). Towards a New Strategy of OS Design, an architectural overview by Thomas Bushnell, BSG. https://www.gnu.org/software/hurd/hurd-paper.html#design
 * Dan McCreary. (2022, April 7). Personal Knowledge Graphs. Towards Data Science. https://towardsdatascience.com/personal-knowledge-graphs-9a23a0b099af
-
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
-
-* Google. (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
-
-* Haiku, V. (2022). The Haiku Book: Messaging Foundations. Retrieved September 25, 2022, from https://www.haiku-os.org/docs/api/app_messaging.html
-
+* Google (Director). (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
+* Haiku, V. (2022, September 12). The Haiku Book: Messaging Foundations. https://www.haiku-os.org/docs/api/app_messaging.html
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
-
 * Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
-
-* Melnikov, A. (2022). IANA Media Types. Internet Assigned Numbers Authority. https://www.iana.org/assignments/media-types/media-types.xhtml
-
+* Humdinger, B. (2019). Workshop: Filetypes, Attributes, Index and Queries. https://www.haiku-os.org/docs/userguide/en/workshop-filetypes+attributes.html
 * Matuschak, A. (n.d.). Evergreen Notes. Andy’s Working Notes. https://notes.andymatuschak.org/z4SDCZQeRo4xFEQ8H4qrSqd68ucpgE6LU155C
-
-* MIME types (IANA media types). (2022). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
-
+* Melnikov, A. (2022). IANA Media Types. Internet Assigned Numbers Authority. https://www.iana.org/assignments/media-types/media-types.xhtml
+* Revol, F. (n.d.). Haiku, a desktop you can still learn from. 19.
 * Revol, F. (2017, February 7). Haiku, a desktop you can still learn from. https://archive.fosdem.org/2017/schedule/event/desktops_haiku_desktop_still_learn_from/attachments/slides/1826/export/events/attachments/desktops_haiku_desktop_still_learn_from/slides/1826/FR_FOSDEM2017_Haiku.pdf
-
-* schema.org, V. (2022, March 17). Schema.org—Schemas—Schema.org. https://schema.org/docs/schemas.html
-
+* schema.org, V. (2022a, March 17). Data Model—Schema.org. https://schema.org/docs/datamodel.html
+* schema.org, V. (2022b, March 17). Schema.org—Schemas—Schema.org. https://schema.org/docs/schemas.html
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
-
 * Sporny, M. (2020, July 16). JSON-LD 1.1. https://www.w3.org/TR/json-ld/
-
 * Telburt, J. (2022, February 16). Data Speaks for Itself: Data Littering. The Data Administration Newsletter. https://tdan.com/data-speaks-for-itself-data-littering/29122
-
+* Various. (2022). MIME types (IANA media types). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
 * Vef, M.-A., Steiner, R., Salkhordeh, R., Steinkamp, J., Vennetier, F., Smigielski, J.-F., & Brinkmann, A. (2020). DelveFS - An Event-Driven Semantic File System for Object Stores. 2020 IEEE International Conference on Cluster Computing (CLUSTER), 35–46. https://doi.org/10.1109/CLUSTER49012.2020.00014
-
 * W3C. (n.d.). WebAnnotation Home. WebAnnotation: Retrieved September 21, 2022, from http://webannotation.org/
