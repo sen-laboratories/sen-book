@@ -29,15 +29,20 @@
 
 ## A Vision for a Personal Knowledge Graph based on the Semantic Desktop
 
--- Wise up your Workspace - Why a Personal Knowledge Graph should live in your File System
+> Wise up your Workspace - Why a Personal Knowledge Graph should live in your personal desktop system
 
 * The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic 
   filesystem, with attributes and relations built-in.
-* Although many modern filesystems now support custom attributes as key/value pairs, they still don't allow to query 
-  for them (there is an experimental patch to make the `find` command support this <<REF!>>), and there is no support for
-  relations, reducing their use to static metadata for display in info panels.
+* Although many modern filesystems now support custom attributes as key/value pairs ("xattrs" for "extended attributes"),
+  they still don't allow to query for them, neither in a simple graphical way for end-users, nor even for advanced users
+  using command-line tools such as UNIX `find` (as an exception, only BSD and hence Darwin/MacOS provide an extended `find` 
+  variant that supports searching extended attribute keys and values using an `-xattr` and `xattrname` switch, respectively)
+  * for Linux, there is now an open-source tool (Bhihe, 2022/2022) that supports this as well, providing a shell wrapper for
+    the `find` command with xattr extensions.
+* Still, there is no support for semantic *relations* in any modern desktop system, reducing the use of desktop semantics
+  to static metadata for display in info panels (like a details view in file browsers).
 * Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, 
-  current semantic desktop solutions introduce a separate data storage like embedded sql databases, adding a lot of overhead 
+  current semantic desktop solutions introduce a separate data storage like embedded SQL databases, adding a lot of overhead 
   and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web 
   than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
 * More ambitious efforts in file system development failed because of similar complexity, trying to integrate
@@ -68,20 +73,35 @@
 
 ### Learning from the Past: A short history of promises and failures of the Semantic Desktop
 
--> will be largely rewritten and compacted to focus on current solution and only refer to past or related projects where needed.
-
-    * The Role of Metadata in Filesystem Design - From Acorn to UNIX
-    basic support and OS usage of metadata was already there in the 1990s, cf Amiga FileNotes used in web browser IBrowse for storing originating web site for downloads
-    * Promising Concepts: Nepomuk and Baloo
-* also tried in mainstream OS but failed, see Microsoft's WinFS (LSoft Technologies Inc., 2022), see also a critical but 
-  insightful discussion in (Orlowski, 2002) by the developers of the more successful and actually realised BeOS File System BFS, see below.
-* Problems with Current Solutions
-        * Falling into the Complexity Trap
-            * Applying Semantic Web Standards to the Desktop
-            many projects failed because they tried to build the entire complexity of the semantic web for personal knowledgge graphs, which is not really feasible or sustainable, see e.g. https://www.gnu.org/software/gnowsys/
-            * Leaky Abstractions: Missing Usability
-        * Neglecting the Performance Impact
-        * Missing Query Functionality
+* (Sauermann et al., 2009) introduced an innovative concept for a semantic desktop and semantic applications, or even just
+simple extensions and mashups, enriching existing applications (a concept shared by SEN). It was realized as part of the KDE Linux desktop in the
+form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project.
+  * Over the course of the project lifetime, however, it quickly became a problem to use a full-fledged database and full-blown
+    standards like RDF even for simple files and metadata, and so a new generation of KDE search was realized (KDE’s Next Generation Semantic Search, 2014):
+  > Instead of having a single RDF-based database for all information, Semantic Search now provides separate data stores
+  > and search interfaces. This allows it to store and search each type of content in an optimal way.
+  * The latest incarnation follows a more lightweight and flexible architecture and uses a file indexing and search framework
+    called "Baloo" (Baloo - KDE Community Wiki, 2022) "with a focus on providing a very small memory footprint along with extremely fast searching.",
+    indicating and fixing one of the major obstacles of semantic desktop adoption of previous efforts.
+* Similar approaches were also tried in mainstream OS's but failed, e.g., Microsoft's WinFS (LSoft Technologies Inc., 2022) -
+  see also a critical but insightful discussion in (Orlowski, 2002) by the developers of the more successful and actually 
+  fully realised BeOS File System BFS, which is detailed in the next section.
+* To summarize, problems with current solutions can be roughly divided into the following categories:
+  * *Falling into the Complexity Trap:* requiring users to categorise and connect all their data by hand, or applying the fulls set of
+    semantic web standards to the desktop: many projects failed because they tried to build the entire complexity 
+    of the semantic web for personal knowledge graphs, which is not really feasible or sustainable, see e.g. Gnowsys (Nagarjuna, 2013)
+    for an ambitious project that wanted to build a "A Kernel for Semantic Computing", but is dormant since 2013.
+  * *Leaky Abstractions:* by exposing the full breadth of semantic (web) standards and concepts, and requiring familiarity
+    with them, including SPARQL for search, or RDF for storage and manipulation, implicitly targeting expert users and
+    neglecting usability and graphical support, everyday users are left behind, severely hindering widespread adoption
+    and thus market adoption and in turn developer support, which would be needed to extend and integrate applications.
+  * *Neglecting the Performance Impact:* as outlined above, previous semantic desktop efforts failed because the resource impact
+    caused by indexing and metadata extraction was simply too high and not deemed worth the effort by many users, because
+    of the other problems mentioned here.
+  * *Missing Query and Navigation Support:* semantic desktop solutions should provide additional benefit beyond simple
+    metadata storage to be really useful and accepted by end users. Explicit and implicit relations should be navigable
+    and exposed throughout the system, including supported applications, and powerful search on semantically linked data
+    should be supported in a simple and intuitive way.
 
 ### BeOS - The First Semantic Desktop OS
 
@@ -379,24 +399,38 @@
 * Access Co., Ltd. (n.d.). The Be Book—System Overview—The Application Kit. Retrieved September 28, 2022, from https://www.haiku-os.org/legacy-docs/bebook/TheApplicationKit_Scripting.html
 * Alexander Obenauer. (2021, August 21). The Graph OS. The Lab Notes. https://alexanderobenauer.com/labnotes/014/
 * Ames, A., Maltzahn, C., Bobb, N., Miller, E. L., Brandt, S. A., Neeman, A., Hiatt, A., & Tuteja, D. (2005). Richer File System Metadata Using Links and Attributes. 22nd IEEE / 13th NASA Goddard Conference on Mass Storage Systems and Technologies (MSST’05), 49–60. https://doi.org/10.1109/MSST.2005.28
+* Atomgraph HQ, V. (n.d.). LinkedDataHub v3—About LinkedDataHub. LinkedDataHub. Retrieved September 29, 2022, from https://atomgraph.github.io/LinkedDataHub/linkeddatahub/docs/about/
+* Baloo—KDE Community Wiki. (2022, January 29). https://community.kde.org/Baloo
 * Berman, J. J. (2022). Classification made relevant how scientists build and use classifications and ontologies. Academic Press.
+* Bernardi, A., Grimnes, G., Groza, T., & Scerri, S. (2011). The NEPOMUK Semantic Desktop (pp. 255–273). https://doi.org/10.1007/978-3-642-19510-5_13
+* Bhihe, C. (2022). Cbhihe/findxattr [Shell]. https://github.com/Cbhihe/findxattr (Original work published 2022)
 * Bushnell, T. (2015, March 8). Towards a New Strategy of OS Design, an architectural overview by Thomas Bushnell, BSG. https://www.gnu.org/software/hurd/hurd-paper.html#design
 * Dan McCreary. (2022, April 7). Personal Knowledge Graphs. Towards Data Science. https://towardsdatascience.com/personal-knowledge-graphs-9a23a0b099af
+* Dragan, L., Handschuh, S., & Decker, S. (2011). The semantic desktop at work: Interlinking notes (p. 24). https://doi.org/10.1145/2063518.2063521
+* foambubble, V. (2022). Foam. Foam. https://foambubble.github.io/foam/
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
 * Google (Director). (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
 * Haiku, V. (2022, September 12). The Haiku Book: Messaging Foundations. https://www.haiku-os.org/docs/api/app_messaging.html
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
 * Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
 * Humdinger, B. (2019). Workshop: Filetypes, Attributes, Index and Queries. https://www.haiku-os.org/docs/userguide/en/workshop-filetypes+attributes.html
+* KDE’s Next Generation Semantic Search. (2014, February 24). KDE.News. https://dot.kde.org/2014/02/24/kdes-next-generation-semantic-search
+* LSoft Technologies Inc. (2022). WinFS Overview—NTFS.com. WinFS Overview. https://www.ntfs.com/winfs_basics.htm
 * Matuschak, A. (n.d.). Evergreen Notes. Andy’s Working Notes. https://notes.andymatuschak.org/z4SDCZQeRo4xFEQ8H4qrSqd68ucpgE6LU155C
 * Melnikov, A. (2022). IANA Media Types. Internet Assigned Numbers Authority. https://www.iana.org/assignments/media-types/media-types.xhtml
+* Nagarjuna, G. (2013, July 14). GNOWSYS - GNU Project—Free Software Foundation. https://www.gnu.org/software/gnowsys/
+* Orlowski, A. (2002, March 29). Windows on a database – sliced and diced by BeOS vets. https://www.theregister.com/2002/03/29/windows_on_a_database_sliced/
+* Pinheiro, E. (2020, January 9). BeOS: The Alternate Universe’s Mac OS X. Hackaday. https://hackaday.com/2020/01/09/beos-the-alternate-universes-mac-os-x/
 * Revol, F. (n.d.). Haiku, a desktop you can still learn from. 19.
 * Revol, F. (2017, February 7). Haiku, a desktop you can still learn from. https://archive.fosdem.org/2017/schedule/event/desktops_haiku_desktop_still_learn_from/attachments/slides/1826/export/events/attachments/desktops_haiku_desktop_still_learn_from/slides/1826/FR_FOSDEM2017_Haiku.pdf
+* Sauermann, L., Kiesel, M., Schumacher, K., & Bernardi, A. (2009). Semantic Desktop. In A. Blumauer & T. Pellegrini (Eds.), Social Semantic Web (pp. 337–362). Springer Berlin Heidelberg. https://doi.org/10.1007/978-3-540-72216-8_17
 * schema.org, V. (2022a, March 17). Data Model—Schema.org. https://schema.org/docs/datamodel.html
 * schema.org, V. (2022b, March 17). Schema.org—Schemas—Schema.org. https://schema.org/docs/schemas.html
+* Schmidt, J. F. K. (2018). Niklas Luhmann’s Card Index: The Fabrication of Serendipity. Sociologica, Vol 12, 53-60 Pages. https://doi.org/10.6092/ISSN.1971-8853/8350
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
 * Sporny, M. (2020, July 16). JSON-LD 1.1. https://www.w3.org/TR/json-ld/
 * Telburt, J. (2022, February 16). Data Speaks for Itself: Data Littering. The Data Administration Newsletter. https://tdan.com/data-speaks-for-itself-data-littering/29122
 * Various. (2022). MIME types (IANA media types). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
 * Vef, M.-A., Steiner, R., Salkhordeh, R., Steinkamp, J., Vennetier, F., Smigielski, J.-F., & Brinkmann, A. (2020). DelveFS - An Event-Driven Semantic File System for Object Stores. 2020 IEEE International Conference on Cluster Computing (CLUSTER), 35–46. https://doi.org/10.1109/CLUSTER49012.2020.00014
 * W3C. (n.d.). WebAnnotation Home. WebAnnotation: Retrieved September 21, 2022, from http://webannotation.org/
+* Wikidata. (2019, December 30). https://www.wikidata.org/wiki/Wikidata:Main_Page
