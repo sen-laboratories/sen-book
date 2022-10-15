@@ -12,28 +12,38 @@
   any deeper semantics to allow meaningful identification of entities and their properties and relations.
   Without an additional classification on how and why some bits of information are connected, users cannot gather meaningful output,
   as they cannot navigate and query based on the depth of knowledge they gathered, confined to see only on shallow,
-  labelled connections on the surface.
-* Also, not everything can or should be captured in note-taking applications and handled via cloud services, as sophisticated as they may have become.
+  labeled connections on the surface.
+* Also, not everything can or should be captured in note-taking applications and handled via cloud services, as sophisticated as they may have become:
   * these services limit what users can do with their data, and without the service, which is bound to a single vendor,
-    the data mey become inaccessible or unusable, at least connections and navigation are then lost.
+    the data may become inaccessible or unusable, at least connections and navigation are then lost.
   * cloud providers either charge recurring fees or utilize user data, which can even pose a threat to users in unsafe 
     environments (like journalism or activism), and is not suitable for sensitive or business data (possible infringement 
     of intellectual property, transfer of copyright to the provider, etc.).
 * A lot of valuable information is still locally stored on personal desktop systems in the form of carefully selected documents, 
-  ebooks, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, concepts, or drafts.
+  e-books, papers or other media, possibly restricted or private sources, and personal artifacts like project notes, ideas, concepts, or drafts.
 * personal knowledge graphs should also cover all kinds of information, not only document or media entities, but also various 
   communication (mails), contacts and events (conferences, meetings, etc.) already present in the user's environment, and 
   highly connected to personal data and work that derives from it.
 * A truly personal knowledge graph needs to live "on the edge", i.e. the user's system, it needs to embrace that existing
   information, understand its connections, make them visible to the user and allow to navigate and query it.
+* this requires an environment that puts *data* in a universal format at the center and lets applications access it via interfaces, which is also the approach championed by the "Data-Centric Manifesto" (Data-Centric Manifesto, n.d.), noting that:
+
+> Data today is trapped in enterprise applications and web platforms.[...] The remedy is to flip this on its head. Data is the center of the universe; applications are ephemeral.
+
+The manifesto lists several core principles, including the use of open standards, self-describing data, and having applications act as "visitors", concluding that:
+
+> The data landscape becomes an onion-like structure with raw or semi-processed data (think of a data lake or a triple store) and an ontology (think high-level data model) to interpret it and a guard (a layer that authorizes use and prevents bad things from happening to the data).
+
+The next sections will illustrate how these pillars of a data-centric and user focused, open information space can be realized as extensions to an existing desktop operating system with a semantic extensions to an existing, modern file system and API.
 
 ## A Vision for a Personal Knowledge Graph based on the Semantic Desktop
 
 > Wise up your Workspace - Why a Personal Knowledge Graph should live in your personal desktop system
 
-* The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic 
-  filesystem, with attributes and relations built-in.
-* Although many modern filesystems now support custom attributes as key/value pairs ("xattrs" for "extended attributes"),
+### Goals and Problems Addressed
+
+* The most natural and feasible way to implement such a system would be to utilize a modern OS that provides a semantic file system, with attributes and relations built-in.
+* Although many modern file systems now support custom attributes as key/value pairs ("xattrs" for "extended attributes"),
   they still don't allow to query for them, neither in a simple graphical way for end-users, nor even for advanced users
   using command-line tools such as UNIX `find` (as an exception, only BSD and hence Darwin/MacOS provide an extended `find` 
   variant that supports searching extended attribute keys and values using an `-xattr` and `xattrname` switch, respectively)
@@ -41,7 +51,7 @@
     the `find` command with xattr extensions.
 * Still, there is no support for semantic *relations* in any modern desktop system, reducing the use of desktop semantics
   to static metadata for display in info panels (like a details view in file browsers).
-* Instead of implementing query support and native support for relations beyond simple links directly in the filesystem layer, 
+* Instead of implementing query support and native support for relations beyond simple links directly in the file system layer, 
   current semantic desktop solutions introduce a separate data storage like embedded SQL databases, adding a lot of overhead 
   and introducing data synchronization issues. They often introduce complex API`s that are more aligned to the semantic web 
   than the desktop, which makes development harder than needed and slows down adoption and user acceptance <<REF!>>.
@@ -49,9 +59,12 @@
   a full-fledged database into a desktop OS intended for everyday use (see "History" section below).
 * So an ideal solution should be lightweight and integrate transparently and naturally with the desktop the user knows 
   and operates daily, built on a file system that supports semantic queries or can be extended with minimum overhead.
+
+### A possible Solution: SEN
+
 * SEN ("Semantic ExteNsions") follows this approach by utilizing and extending the rich infrastructure and API already 
   provided by Haiku, the most prominent open-source descendant of BeOS [](). Files naturally represent entities, as the 
-  type system is based on MIME types, properties of entities are stored in custom filesystem attributes, only relations 
+  type system is based on MIME types, properties of entities are stored in custom file system attributes, only relations 
   have been omitted because the original creators of BeOS identified the same fallacies outlined above (the first version
   of the OS still had a Table and Relations API though).
 * SEN circumvents this by also storing relations in file system attributes, similar to properties, and providing a very 
@@ -329,7 +342,7 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
     `RelationNavigator` service provided by the SEN API, which "opens" supported relations in a suitable way, e.g.
     by opening a PDF viewer and jumping to the given page, or by opening a web browser and highlighting the text referenced
     provided in the "WebAnnotation" relation property as a standard WebAnnotation, se (Sporny, 2020).
-  * this kind of "desktop deep linking" is supported through the extended scripting functionality in Haiku, which provides
+  * this kind of "deep linking" is supported through the extended scripting functionality in Haiku, which provides
     a message-based extension mechanism for controlling various aspects of the system itself, and applications.
   * there are well-defined standard Messages for simple operations like `OPEN` or `CLOSE`, but applications can support
     any kind of custom messages, which can then be bundled in the form of "scripting suites".
@@ -343,7 +356,7 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 * For ternary relations, we need to extend this concept and add another level, i.e. through a folder inside the virtual 
   folder, that holds all relation properties from the source entity to the 3rd entity involved in the relation.
   * e.g., for references from an annotation to a paper that references another author in several ways and on several pages,
-    SEN would create a folder "<Paper> Relations to <Author>" inside the virtual folder "<Annotation> relations to <Paper>".
+    SEN would create a folder "Relations of *Paper* to *Author*" inside the virtual folder "*Annotation* relations to *Paper*".
   * this nested folder would then hold all references with label and page number as file attributes, shown in columns
     (without actual file types or targets, since the file (type) will always be the relation source, and the target is
     always the third entity involved), e.g.:
@@ -354,6 +367,8 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 | references | 4    |
 | associates | 7    |
 * [[Fig]].{14}.{13}.{This table illustrates a nested folder showing all outgoing links and properties of a ternary relation.}
+
+This navigation can be extended along the chain of relations, so users can navigate relations of a file in a relation targets view to another view showing relations of that file.
 
 ### Calendar
 
@@ -366,33 +381,42 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 
 ### Notes: UNO - a Concept for a Universal NOtebook
 
-* Simple but Semantic
+* simple but semantic linked notes stored as actual searchable text files with metadata and references in filesystem attributes
+- shows the powerfully simple and well integrated approach of SEN, unlike proprietary note taking systems that lock data in custom formats or even use a database, like MacOS Notes, the bundled notes app, making it hard for users to easily access and backup their data (Horowitz, 2020)
 * also suitable for story writing: characters, locations and story arch as (self-)references
 * Features and Use Cases - Authoring system (Relation Views for self-relations (structure, internal links to entities in the text) and external references)
 * Prototype Concept:
 ![Semantic Editor](images/editor-ner.png "semantic editor with NER built-in")
 * as outlined above, all extracted entities can also be browsed by navigating the text file's relations in the file browser:
 ![Browsing Relations](images/file-browser-relations.svg "navigating document relations in the file browser")
-  * for ternary relations, as mentioned above, we need to extend this concept and add another level, i.e. a folder, to
-    hold all relation properties to the 3rd entity involved in the relation:
 
 ### Extending a Code Editor into an IDE
 
 * adding semantic structuring and navigation using SEN
 * self-relations for, e.g., methods and classes
 * external relations for included files (C/C++) or referenced classes (Java imports)
-* can be realised on top of existing application(s) using SEN API, or even (more as a showcase) using the SEN enabled file browser.
+* can be realised on top of existing application(s) using SEN API, or even (more as a showcase but still a valid use case) using the SEN enabled file browser.
 * example:
 
 ![SEN-IDE](images/sen-ide.svg "an IDE utilising the SEN API")
 
 ## Outlook, Ongoing and Future Work
 
-* Integrating Information Extraction and Document Analysis
-* Building Dynamic Relations: lazily evaluated when user navigates them, used for expensive and volatile relations e.g. for "similar" files
-* Rules and Inference of Relations and Attributes
-* Further Desktop Extensions:
-  * rich Tracker views, e.g. 2d-axis view for arranging items on a timeline, or by proximity etc.
+### Integrating Information Extraction and Document Analysis
+
+### Dynamic Relations
+
+* lazily evaluated when user navigates them, used for expensive and volatile relations e.g. for "similar" files
+
+### Rules and Inference of Relations and Attributes
+
+* text based rules language where axioms are stored in simple text files as part of SEN configuration
+* lazy evaluation like for dynamic relations above
+
+### More Semantic Tracker Extensions
+
+* rich Tracker views, e.g. 2d-axis view for arranging items on a timeline, or by proximity etc.
+* Actions to operate on Entities beyond simple viewing and navigation: not strictly part of SEN or semantic extensions, but useful e.g. for calendar appointments or E-Mails (`Reply`) or contacts (`Call`)
 
 ## References
 
@@ -411,6 +435,7 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
 * Google (Director). (2007, February 13). Haiku: The Operating System. https://www.youtube.com/watch?v=LxAQxGQB1A8
 * Haiku, V. (2022, September 12). The Haiku Book: Messaging Foundations. https://www.haiku-os.org/docs/api/app_messaging.html
+* Horowitz, P. (2020, January 15). Where are Notes Stored on Mac? OS X Daily. https://osxdaily.com/2020/01/15/where-notes-stored-locally-mac/
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
 * Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
 * Humdinger, B. (2019). Workshop: Filetypes, Attributes, Index and Queries. https://www.haiku-os.org/docs/userguide/en/workshop-filetypes+attributes.html
