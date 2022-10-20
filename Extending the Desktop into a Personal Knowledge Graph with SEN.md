@@ -159,6 +159,10 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 
 * thin message-based API for integrating with applications including the standard file browser (called "Tracker" in Haiku)
 
+* loosely coupled architecture using existing external tools (this can be even simple self-written scripts) for metadata and relation extraction, and the file system attributes as standardised data format, with minimal adaptations where needed for SEN to work (e.g. common attribute names or storing values in BMessage form, which could also be translated by SEN on demand)
+
+* by building on standard operating system semantics (specifically, POSIX) and advanced but standardised file system concepts, SEN can make use of the pipes&filters pattern first popularised already in 1976 by (Kernighan & Plauger, 1976), where tools are designed to perform a single purpose well but also implement standard interfaces for seamless interoperability, chaining simple commands together to perform more complex tasks (then using UNIX "pipes", but in this context, on a higher level through file attributes, scripting and messaging).
+
 ### Relations - the missing Link
 
 * corner stone of the proposed solution, storing relations between files, along with relation properties, in filesystem attributes:
@@ -402,7 +406,28 @@ This navigation can be extended along the chain of relations, so users can navig
 
 ## Outlook, Ongoing and Future Work
 
+### Using Existing Ontologies
+
+Although SEN is targeted at everyday desktop users (with some inclination towards information structuring and modeling), the goal is to integrate external ontologies from various domains to avoid having to reinvent the wheel, as there are already a lot of well established and proven ontologies that could act as a solid foundation for a lot of use cases where SEN could build upon.
+
+This would not only keep SEN consistent with the semantic ecosystem, avoiding a lock-in to yet another specialised solution, but also ease the burden on users or developers to create all the needed types, properties and relations for the desired use cases, and add mappings to the file system, as described above.
+
+SEN is completely agnostic to external ontology formats, but it might not be necessary to draw in all the dependencies and effort of full OWL and RDF support, but start with simpler solutions like OTTR (Skjæveland, 2021), or use import scripts like Wikidata import tools (Wikidata, 2019) and adapt them to create file types, properties and relations as needed by SEN.
+
 ### Integrating Information Extraction and Document Analysis
+
+Since SEN acts as a background daemon, providing semantic services to the operating system and API, it is highly decoupled from information storage and retrieval, and how attributes or even relations are extracted and managed.
+This allows for a powerful and very flexible integration with a vast array of existing, mature and open-source tools well known and widely popular in the semantic and document analysis domain.
+
+Since Haiku comes pre-installed with Python, all the popular document analysis tools can be readily used to extract information from documents of all formats.
+These can be combined through scripting to store extracted information in the form required by SEN, namely file attributes in the format defined by SEN.
+Once the information is available in this normalised format, it can be transparently accessed by the system or other applications through the SEN API.
+
+Applications range from simple metadata extraction (like author, keywords, page count from documents, or image metadata from EXIF/IPTC information, or audio/video metadata like bitrate, format, subtitle information, length or even language) to more advanced document understanding and classification, extracting semantic information through sentiment analysis, specific information from invoices, references to people, organisations, locations or dates, etc.
+
+Tools are of varying complexity, depending on the task, starting with single-purpose tools like pdfplumber (Singer-Vine, 2015/2022), which provides extensive metadata-extraction like author, creation date, or page count, to detailed structural information like tables and images, but also references (useful for extracting relations) and annotations.
+
+Advanced solutions combine several tools into tool chains and provide integrated solutions like (DocQuery, 2022/2022) using powerful document classification systems like Donut (Kim et al., 2022), which can also be used stand-alone.
 
 ### Dynamic Relations
 
