@@ -132,8 +132,7 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 ## Introducing SEN - a modern minimalist user-centric approach
 
 * BeOS already supported a lot of use cases for a semantic desktop, as can be seen in the workshop provided in Humdinger, B. (2019)
-* However, to keep the system and API design simple and efficient, a necessity in the time of its making (late 1990s),
-  the concept of relations was deliberately omitted completely.
+* However, to keep the system and API design simple and efficient, a necessity in the time of its making (late 1990s), the concept of relations was deliberately omitted completely.
 
 ### Haiku - the Perfect Prototyping Environment
 
@@ -145,10 +144,11 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
   * Tracker
   * FileTypes
   * Filesystem API
-* mapping SEN concepts
+* mapping SEN concepts to file system and operating system API's:
   * File types
   * Attributes
-  * Queries
+  * Relations -> attributes
+  * Queries - enriched, results in file browser window, like for normal queries
 * picks up concepts from BeOS for filesystem based metadata handling and search
 
 ### Basic Architecture
@@ -191,14 +191,12 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 
 ### Mapping the conceptual model of SEN to OS and desktop concepts
 
-* SEN realizes a simple form of ontologies through only using file system semantics and the OS filesystem API, adding
-  support for configuration, management and navigation of relations with a custom API on top.
+* SEN realizes a simple form of ontologies through only using file system semantics and the OS file system API, adding support for configuring, managing and navigating relations with a custom API on top.
 * *Ontologies* in SEN are comprised of:
   * *Entities* and their *attributes* are defined through file types and their properties
     * Configuration is already handled through a  well-defined OS file attribute `BEOS:TYPE` and a user-facing 
       settings application
-    * The OS natively uses standard MIME types (MIME Types (IANA Media Types), 2022) for identifying the file types, as
-      described in Humdinger, B. (2009b).
+    * The OS uses standard MIME types (MIME Types (IANA Media Types), 2022) for identifying file types, as described in Humdinger, B. (2009b).
     * File name extensions as used in other operating systems are purely optional in Haiku, as the OS uses a MIME database 
       and checks the file's type attribute for a match.
     * The file type is detected by inspecting the file itself, using MIME type sniffing, e.g. parsing magic byes. 
@@ -299,10 +297,8 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 
 ### Ternary Relations
 
-* A special case but also an important use case is the support for ternary relations, that is when 3 entities are
-  part of a relation.
-* An example would be, extending the notes example above, relations between notes on a movie referencing actors
-  that appear in certain scenes, or locations on specific time codes:
+* A special relationship type that is nevertheless encountered in many use cases is the support for *ternary relations*, i.e. when 3 entities are part of a relation.
+* An example would be, extending the notes example above, relations between *notes* on a *movie* referencing *actors* that appear in certain scenes; or book notes referencing locations on specific pages:
 
 ![Ternary Relations](images/ternary-relation.svg "supporting ternary relations")
 
@@ -316,22 +312,28 @@ form of NEPOMUK (Bernardi et al., 2011), an ambitious EU funded research project
 
 ## Desktop Use Cases and Examples - Re-modelling standard applications with SEN
 
-### Base Concepts
+SEN maps common and well established desktop principles to semantic concepts, acting as an *Extension* to a well known environment users are familiar with. Only when necessary, metaphors are stretched to support functionality that is not part of existing desktop operating systems. This way, the barrier to entry is lowered as much as possible, and users can adopt semantic concepts and use cases for working with personal knowledge graphs gradually and more easily.
 
-* Files as Entities
-* Relations grouped by role (Attendee, Contributor) or relation label (attendedBy, contributedBy)
-* UI: in Haiku (as in BeOS), it is a common desktop metaphor to have clickable menus, e.g. clicking on a folder item 
-  in the "Copy" menu will open that folder in a new window.
-  * The same metaphor is used for navigating relations: clicking on a sub menu in the "Open Related..." menu will open
+### Basic Concepts
+
+* As established above, semantic *Entities* can be simply represented as *files*, with a meaningful icon representing the real world (or virtual) object. This allows users to directly map their mental model of things to desktop objects and interact or manipulate them in a direct and intuitive manner.
+* *Entities* do not have to actually *contain* the represented object's data, they can just act as a placeholder (or "proxy"), possibly - but not necessarily - pointing to the actual object, as required. This allows to build knowledge graphs from a meta level, describing things and relations between them, but keeping resource usage modest, without requiring to replicate all data on the user's desktop. This also allows bridging local and remote locations, e.g. referencing files on a network drive, or pointing to internet resources.
+  * An interesting project in this regard is the *Interplanetary File System* (IPFS), see (IPFS Powers the Distributed Web, 2022) and (Ludington, 2022), which provides stable and cryptographically verified, trusted resource locators that don't break when files move (but stay unchanged). This would allow users to globally and reliably reference external objects, and relations would be stable even when the personal knowledge graph is moved or shared, or when external objects move to another location.
+* *Relations* are stored as properties in file system attributes, where they are not directly visible, but they can be resolved and displayed in different ways using the SEN API by supporting applications like the file browser Tracker, or simply by using command line tools that interact via messaging. The SEN API implements various filters and mutations for all common use cases and provides applications with the needed projection model.
+* for convenient user interaction, relation targets can be either grouped by Entity *type* (like `Author`, `Book`, `Movie`, `Person`), *role* (like `Attendee`, `Contributor`, `Publisher`, `Reviewer`) or *label* (like `attendedBy`, `contributesTo`, `cites`).
+* *Context*, another core semantic concept, is mapped to *Folders*, so users can organize their data in several project related personal knowledge graphs that live in separate folders and contain only project-related entities and relations.
+  * this mapping is not enforced and completely arbitrary (SEN adheres to file system semantics where possible, and users are free to manage their files as needed, also depending on the use case and experience), but serves as a sensible convention, so related files are grouped together and can also be easily shared or backed up and restored on a different system, or exported and imported between installations and versions.
+* UI: in Haiku (as in BeOS), it is a common desktop metaphor to have clickable menus, e.g. clicking on a folder item in the "Copy" menu will open that folder in a new window.
+* The same metaphor is used for navigating relations: clicking on a sub menu in the "Open Related..." menu will open
     all targets of that relation in a separate window:
+    <<TOOD:illustration>>
+* just like the standard file browser offers a flow-like navigation through the entire file system by providing infinitely nested menus for folders and their contents, it is even possible to provide an endless path through all relations and their targets ("SEN mode"), if so desired.
+  <<TODO: screenshot BeOS file navigation vs. SEN mode concept>>
 
 ### Visualising and Navigating Relations in Tracker
 
-* Because SEN is very user-centric and should not be limited to experts and knowledge workers, the standard file browser,
-  Tracker, is extended (with minimal modifications) so that relations are visible in the context menu, and users can
-  open related files just as they would with normal files, but with some added functionality to support semantic relations.
-* A special case is the display of all related files for a given relation - here, SEN uses a special "virtual" folder
-  (similar to dynamic queries !!ref) to hold relation targets:
+* Because SEN is very user-centric and should not be limited to experts and knowledge workers, the standard file browser, *Tracker*, is extended (with minimal modifications) so that relations are visible in the context menu, and users can open related files just as they would with normal files, but with some added functionality to support semantic relations.
+* A special case is the display of all related files for a given relation - here, SEN uses a special "virtual" folder (similar to dynamic queries !!ref) to hold relation targets:
   * Since also menus (holding sub menus) can be invoked in Haiku, users are accustomed to this behavior.
   * When invoking a "related entities" menu, the adapted Tracker calls the SEN API to create and return a reference to
     a special, temporary folder holding all targets of the selected relation.
@@ -455,6 +457,8 @@ Advanced solutions combine several tools into tool chains and provide integrated
 * Bhihe, C. (2022). Cbhihe/findxattr [Shell]. https://github.com/Cbhihe/findxattr (Original work published 2022)
 * Bushnell, T. (2015, March 8). Towards a New Strategy of OS Design, an architectural overview by Thomas Bushnell, BSG. https://www.gnu.org/software/hurd/hurd-paper.html#design
 * Dan McCreary. (2022, April 7). Personal Knowledge Graphs. Towards Data Science. https://towardsdatascience.com/personal-knowledge-graphs-9a23a0b099af
+* Data-Centric Manifesto. (n.d.). Retrieved October 15, 2022, from http://www.datacentricmanifesto.org/
+* DocQuery: Document Query Engine Powered by Large Language Models. (2022). [Python]. impira. https://github.com/impira/docquery (Original work published 2022)
 * Dragan, L., Handschuh, S., & Decker, S. (2011). The semantic desktop at work: Interlinking notes (p. 24). https://doi.org/10.1145/2063518.2063521
 * foambubble, V. (2022). Foam. Foam. https://foambubble.github.io/foam/
 * Gifford, D. K., Jouvelot, P., Sheldon, M. A., & O’Toole, J. W. (1991). Semantic file systems. Proceedings of the Thirteenth ACM Symposium on Operating Systems Principles  - SOSP ’91, 16–25. https://doi.org/10.1145/121132.121138
@@ -464,8 +468,12 @@ Advanced solutions combine several tools into tool chains and provide integrated
 * Humdinger, B. (2009a). Attributes (Haiku User Guide). https://www.haiku-os.org/docs/userguide/en/attributes.html
 * Humdinger, B. (2009b). Haiku Filetypes (Userguide). The Haiku Foundation. https://www.haiku-os.org/docs/userguide/en/filetypes.html
 * Humdinger, B. (2019). Workshop: Filetypes, Attributes, Index and Queries. https://www.haiku-os.org/docs/userguide/en/workshop-filetypes+attributes.html
+* IPFS Powers the Distributed Web. (2022). https://ipfs.tech/
 * KDE’s Next Generation Semantic Search. (2014, February 24). KDE.News. https://dot.kde.org/2014/02/24/kdes-next-generation-semantic-search
+* Kernighan, B. W., & Plauger, P. J. (1976). Software tools. Addison-Wesley Pub. Co.
+* Kim, G., Hong, T., Yim, M., Nam, J., Park, J., Yim, J., Hwang, W., Yun, S., Han, D., & Park, S. (2022). OCR-free Document Understanding Transformer (arXiv:2111.15664). arXiv. http://arxiv.org/abs/2111.15664
 * LSoft Technologies Inc. (2022). WinFS Overview—NTFS.com. WinFS Overview. https://www.ntfs.com/winfs_basics.htm
+* Ludington, J. (2022, October 25). Devs: It’s Time to Consider IPFS as an Alternative to HTTP. The New Stack. https://thenewstack.io/devs-its-time-to-consider-ipfs-as-an-alternative-to-http/
 * Matuschak, A. (n.d.). Evergreen Notes. Andy’s Working Notes. https://notes.andymatuschak.org/z4SDCZQeRo4xFEQ8H4qrSqd68ucpgE6LU155C
 * Melnikov, A. (2022). IANA Media Types. Internet Assigned Numbers Authority. https://www.iana.org/assignments/media-types/media-types.xhtml
 * Nagarjuna, G. (2013, July 14). GNOWSYS - GNU Project—Free Software Foundation. https://www.gnu.org/software/gnowsys/
@@ -478,9 +486,11 @@ Advanced solutions combine several tools into tool chains and provide integrated
 * schema.org, V. (2022b, March 17). Schema.org—Schemas—Schema.org. https://schema.org/docs/schemas.html
 * Schmidt, J. F. K. (2018). Niklas Luhmann’s Card Index: The Fabrication of Serendipity. Sociologica, Vol 12, 53-60 Pages. https://doi.org/10.6092/ISSN.1971-8853/8350
 * Silverston, L. (2020, November 18). Zen and the Art of Data Maintenance: Data ‘Mine’ing and Universal Data Semantics. The Data Administration Newsletter. https://tdan.com/zen-and-the-art-of-data-maintenance-data-mineing-and-universal-data-semantics/27543
+* Singer-Vine, J. (2022). Pdfplumber [Python]. https://github.com/jsvine/pdfplumber (Original work published 2015)
+* Skjæveland, M. (2021). The OTTR Template Library. Advances in Pattern-Based Ontology Engineering, 51.
 * Sporny, M. (2020, July 16). JSON-LD 1.1. https://www.w3.org/TR/json-ld/
 * Telburt, J. (2022, February 16). Data Speaks for Itself: Data Littering. The Data Administration Newsletter. https://tdan.com/data-speaks-for-itself-data-littering/29122
 * Various. (2022). MIME types (IANA media types). Mozilla Foundation. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
 * Vef, M.-A., Steiner, R., Salkhordeh, R., Steinkamp, J., Vennetier, F., Smigielski, J.-F., & Brinkmann, A. (2020). DelveFS - An Event-Driven Semantic File System for Object Stores. 2020 IEEE International Conference on Cluster Computing (CLUSTER), 35–46. https://doi.org/10.1109/CLUSTER49012.2020.00014
 * W3C. (n.d.). WebAnnotation Home. WebAnnotation: Retrieved September 21, 2022, from http://webannotation.org/
-* Wikidata. (2019, December 30). https://www.wikidata.org/wiki/Wikidata:Main_Page
+* Wikidata. (2019, December 30). https://www.wikidata.org/wiki/Wikidata:Main_Pag* e
